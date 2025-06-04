@@ -14,18 +14,6 @@
  *  limitations under the License.
  */
 
-#include <Arduino.h>
+#pragma once
 
-#include "matrix.hpp"
-#include "wifi.hpp"
-
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // setup the Wi-Fi configuration
-  setupWifi();
-  // setup the matrix configuration
-  setupMatrix();
-}
-
-void loop() {}
+void setupMatrix();
