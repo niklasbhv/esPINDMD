@@ -35,6 +35,4 @@ void setupWifi() {
   }
 }
 
-void clearWifi() {
-  wm.resetSettings();
-}
+void clearWifi() { wm.resetSettings(); }

@@ -14,11 +14,15 @@
  *  limitations under the License.
  */
 
+#include <Arduino.h>
+
 #include "wifi.hpp"
 
 void setup() {
-    // setup the Wi-Fi configuration
-    setupWifi();
+  // begin the serial console
+  Serial.begin(115200);
+  // setup the Wi-Fi configuration
+  setupWifi();
 }
 
 void loop() {}
