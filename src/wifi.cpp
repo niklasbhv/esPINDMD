@@ -14,11 +14,9 @@
  *  limitations under the License.
  */
 
-#include <WiFiManager.h>
+#include "wifi.hpp"
 
-WiFiManager wm;
-
-void setupWifi() {
+Wifi::Wifi() {
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
   // set dark theme
@@ -27,12 +25,11 @@ void setupWifi() {
   wm.setConfigPortalTimeout(180);
   // create a Wi-Fi AP
   bool res;
-  res = wm.autoConnect("ESPINMDMD", "pinball");
+  res = wm.autoConnect("esPINMDMD", "pinball");
   if (!res) {
     Serial.println("Failed to connect or hit timeout");
   } else {
     Serial.println("Connected to Wi-Fi");
   }
 }
-
-void clearWifi() { wm.resetSettings(); }
+void Wifi::reset() { wm.resetSettings(); }

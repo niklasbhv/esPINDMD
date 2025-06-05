@@ -16,5 +16,13 @@
 
 #pragma once
 
-void setupWifi();
-void clearWifi();
+#include <WiFiManager.h>
+
+class Wifi {
+ private:
+  WiFiManager wm;
+
+ public:
+  Wifi();
+  void reset();
+};

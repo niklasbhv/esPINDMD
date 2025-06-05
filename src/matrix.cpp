@@ -14,15 +14,13 @@
  *  limitations under the License.
  */
 
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+#include "matrix.hpp"
 
 #define PANEL_RES_X 64  // vertical number of pixels per display
 #define PANEL_RES_Y 32  // vertical number of pixels per display
 #define PANEL_CHAIN 2   // number of displays
 
-MatrixPanel_I2S_DMA *dma_display = nullptr;
-
-void setupMatrix() {
+Matrix::Matrix() {
   // module configuration
   HUB75_I2S_CFG mxconfig(PANEL_RES_X,  // module width
                          PANEL_RES_Y,  // module height
@@ -33,4 +31,8 @@ void setupMatrix() {
   dma_display->begin();
   dma_display->setBrightness8(90);  // 0-255
   dma_display->clearScreen();
+}
+
+void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
+  dma_display->drawPixel(x, y, colour);
 }
