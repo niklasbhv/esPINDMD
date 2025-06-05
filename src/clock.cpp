@@ -20,8 +20,8 @@
 #define SYNC_TIMEOUT_S 60
 
 Clock::Clock() {
-    Serial.println("Initializing the clock");
-    setServer(NTP_SERVER);
-    Serial.println("Syncing with NTP server: " + String(NTP_SERVER));
-    waitForSync(SYNC_TIMEOUT_S);
+  Serial.println("Initializing the clock");
+  setServer(NTP_SERVER);
+  Serial.println("Syncing with NTP server: " + String(NTP_SERVER));
+  waitForSync(SYNC_TIMEOUT_S);
 }

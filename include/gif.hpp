@@ -14,27 +14,18 @@
  *  limitations under the License.
  */
 
-#include <Arduino.h>
+#pragma once
 
-#include "clock.hpp"
-#include "gif.hpp"
+#include <AnimatedGIF.h>
+
 #include "matrix.hpp"
-#include "sd.hpp"
-#include "wifi.hpp"
 
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // setup the Wi-Fi configuration
-  Wifi wifi;
-  // setup the matrix configuration
-  Matrix matrix;
-  // setup the SD Card configuration
-  Sd sd;
-  // setup the clock
-  Clock clock;
-  // setup the gif class
-  Gif gif(matrix);
-}
+class Gif {
+ private:
+  AnimatedGIF gif;
+  Matrix& matrix;
 
-void loop() {}
+ public:
+  Gif(Matrix& matrix);
+  void draw(GIFDRAW* pDraw);
+};
