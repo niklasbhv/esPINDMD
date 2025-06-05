@@ -23,9 +23,9 @@ void setup() {
   // begin the serial console
   Serial.begin(115200);
   // setup the Wi-Fi configuration
-  Wifi wifi = Wifi();
+  Wifi wifi;
   // setup the matrix configuration
-  Matrix matrix = Matrix();
+  Matrix matrix;
 }
 
 void loop() {}
