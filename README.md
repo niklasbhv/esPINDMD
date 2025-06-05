@@ -1,4 +1,4 @@
-# ESPINDMD
+# esPINDMD
 
 ## Disclaimer
 
