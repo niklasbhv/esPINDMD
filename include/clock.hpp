@@ -14,24 +14,13 @@
  *  limitations under the License.
  */
 
+#pragma once
+
 #include <Arduino.h>
+#include <ezTime.h>
 
-#include "matrix.hpp"
-#include "sd.hpp"
-#include "wifi.hpp"
-#include "clock.hpp"
-
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // setup the Wi-Fi configuration
-  Wifi wifi;
-  // setup the matrix configuration
-  Matrix matrix;
-  // setup the SD Card configuration
-  Sd sd;
-  // setup the clock
-  Clock clock;
-}
-
-void loop() {}
+class Clock {
+ private:
+ public:
+  Clock();
+};

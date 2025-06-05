@@ -14,24 +14,14 @@
  *  limitations under the License.
  */
 
-#include <Arduino.h>
-
-#include "matrix.hpp"
-#include "sd.hpp"
-#include "wifi.hpp"
 #include "clock.hpp"
 
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // setup the Wi-Fi configuration
-  Wifi wifi;
-  // setup the matrix configuration
-  Matrix matrix;
-  // setup the SD Card configuration
-  Sd sd;
-  // setup the clock
-  Clock clock;
-}
+#define NTP_SERVER "pool.ntp.org"
+#define SYNC_TIMEOUT_S 60
 
-void loop() {}
+Clock::Clock() {
+    Serial.println("Initializing the clock");
+    setServer(NTP_SERVER);
+    Serial.println("Syncing with NTP server: " + String(NTP_SERVER));
+    waitForSync(SYNC_TIMEOUT_S);
+}
