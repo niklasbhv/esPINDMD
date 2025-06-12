@@ -22,6 +22,11 @@
 // defines compatibility for FAT16, FAT32 and exFAT
 #define SD_FAT_TYPE 3
 
+/**
+ * Class used for initialization and low level access to
+ * files on the SD Card. It also features functionality
+ * for generating a index file.
+ */
 class Sd {
  private:
 #if SD_FAT_TYPE == 0
@@ -42,4 +47,5 @@ class Sd {
 
  public:
   Sd();
+  int generateFileIndex(const char* folderPath, const char* indexFilename);
 };

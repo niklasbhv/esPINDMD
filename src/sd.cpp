@@ -19,6 +19,8 @@
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_SPEED SD_SCK_MHZ(4)
 
+#define MAX_FILENAME_LENGTH 100
+
 // Chip select pin for the SD Card module
 const uint8_t SD_CS_PIN = 10;
 
@@ -36,4 +38,41 @@ Sd::Sd() {
   if (!sd.begin(SD_CS_PIN, SPI_SPEED)) {
     Serial.println("SD card initialization failed!");
   }
+}
+
+/**
+ * Pre-processing a index to enable randomized playback of gifs
+ */
+int Sd::generateFileIndex(const char* folderPath, const char* indexFilename) {
+  SdFile dir, entry, indexFile;
+
+  if (!dir.open(folderPath)) {
+    Serial.println("Failed to open folder");
+    return -1;
+  }
+
+  if (!indexFile.open(indexFilename, O_WRITE | O_CREAT | O_TRUNC)) {
+    Serial.println("Failed to create index file");
+    return -1;
+  }
+
+  while (entry.openNext(&dir, O_RDONLY)) {
+    if (!entry.isDir()) {
+      char name[MAX_FILENAME_LENGTH];
+      entry.getName(name, sizeof(name));
+      String fname(name);
+      // fname.toLowerCase();
+      if (fname.endsWith(".gif")) {
+        indexFile.println(fname.c_str());
+        Serial.println("Indexed: " + fname);
+      }
+    }
+    entry.close();
+  }
+
+  indexFile.close();
+  dir.close();
+
+  Serial.println("Indexing complete.");
+  return 0;
 }
