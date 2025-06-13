@@ -27,4 +27,6 @@ SystemController::SystemController() {
   Clock _clock;
   // setup the gif class
   Gif _gif;
+  // setup the mqtt config
+  Mqtt _mqtt("mqtt.test.org", 1883);
 };

@@ -16,22 +16,19 @@
 
 #pragma once
 
-#include "Clock.hpp"
-#include "Gif.hpp"
-#include "Matrix.hpp"
-#include "Mqtt.hpp"
-#include "Sd.hpp"
-#include "Wifi.hpp"
+#include <PubSubClient.h>
+#include <WiFi.h>
 
-class SystemController {
+class Mqtt {
  private:
-  Clock _clock;
-  Gif _gif;
-  Sd _sd;
-  Matrix _matrix;
-  Wifi _wifi;
-  Mqtt _mqtt(const char* mqtt_server, uint16_t mqtt_port);
+  String _clientId;
+  WiFiClient _wifiClient;
+  PubSubClient _mqttClient;
+  void callback(char* topic, uint8_t* payload, size_t length);
 
  public:
-  SystemController();
+  Mqtt(const char* mqtt_server, uint16_t mqtt_port);
+  void connect();
+  int reconnect();
+  boolean connected();
 };
