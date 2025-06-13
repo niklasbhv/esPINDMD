@@ -76,3 +76,27 @@ int Sd::generateFileIndex(const char* folderPath, const char* indexFilename) {
   Serial.println("Indexing complete.");
   return 0;
 }
+
+/**
+ * Function used to load a index file
+ */
+int Sd::loadFileIndex(const char *indexFilename) {
+  SdFile indexFile;
+  if (!indexFile.open(indexFilename, O_READ)) {
+    Serial.println("Failed to open index file");
+    return -1;
+  }
+
+  char line[MAX_FILENAME_LENGTH];
+  while (indexFile.fgets(line, sizeof(line)) && gifCount < MAX_GIF_FILES) {
+    gifFiles[gifCount++] = String(line);  // .trim() Remove newline
+  }
+
+  indexFile.close();
+
+  Serial.print("Loaded ");
+  Serial.print(gifCount);
+  Serial.println(" files from index.");
+
+  return 0;
+}

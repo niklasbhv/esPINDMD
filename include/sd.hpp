@@ -22,6 +22,8 @@
 // defines compatibility for FAT16, FAT32 and exFAT
 #define SD_FAT_TYPE 3
 
+#define MAX_GIF_FILES 100
+
 /**
  * Class used for initialization and low level access to
  * files on the SD Card. It also features functionality
@@ -29,6 +31,8 @@
  */
 class Sd {
  private:
+  String gifFiles[MAX_GIF_FILES];
+  int gifCount = 0;
 #if SD_FAT_TYPE == 0
   SdFat sd;
   File file;
@@ -48,4 +52,5 @@ class Sd {
  public:
   Sd();
   int generateFileIndex(const char* folderPath, const char* indexFilename);
+  int loadFileIndex(const char *indexFilename);
 };
