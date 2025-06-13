@@ -35,7 +35,7 @@ Sd::Sd() {
   Serial.println("SDCARD_SS_PIN: " + String(SDCARD_SS_PIN));
 #endif  // SDCARD_SS_PIN
   // try to initialize the sd card
-  if (!sd.begin(SD_CS_PIN, SPI_SPEED)) {
+  if (!_sd.begin(SD_CS_PIN, SPI_SPEED)) {
     Serial.println("SD card initialization failed!");
   }
 }
@@ -88,14 +88,14 @@ int Sd::loadFileIndex(const char* indexFilename) {
   }
 
   char line[MAX_FILENAME_LENGTH];
-  while (indexFile.fgets(line, sizeof(line)) && gifCount < MAX_GIF_FILES) {
-    gifFiles[gifCount++] = String(line);  // .trim() Remove newline
+  while (indexFile.fgets(line, sizeof(line)) && _gifCount < MAX_GIF_FILES) {
+    _gifFiles[_gifCount++] = String(line);  // .trim() Remove newline
   }
 
   indexFile.close();
 
   Serial.print("Loaded ");
-  Serial.print(gifCount);
+  Serial.print(_gifCount);
   Serial.println(" files from index.");
 
   return 0;

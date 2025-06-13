@@ -22,10 +22,9 @@
 
 class Gif {
  private:
-  AnimatedGIF gif;
-  Matrix& matrix;
+  AnimatedGIF _gif;
 
  public:
-  Gif(Matrix& matrix);
-  void draw(GIFDRAW* pDraw);
+  Gif();
+  void draw(Matrix& matrix, GIFDRAW* pDraw);
 };

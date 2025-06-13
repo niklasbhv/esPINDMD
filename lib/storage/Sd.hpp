@@ -31,20 +31,20 @@
  */
 class Sd {
  private:
-  String gifFiles[MAX_GIF_FILES];
-  int gifCount = 0;
+  String _gifFiles[MAX_GIF_FILES];
+  int _gifCount = 0;
 #if SD_FAT_TYPE == 0
-  SdFat sd;
-  File file;
+  SdFat _sd;
+  File _file;
 #elif SD_FAT_TYPE == 1
-  SdFat32 sd;
-  File32 file;
+  SdFat32 _sd;
+  File32 _file;
 #elif SD_FAT_TYPE == 2
-  SdExFat sd;
-  ExFile file;
+  SdExFat _sd;
+  ExFile _file;
 #elif SD_FAT_TYPE == 3
-  SdFs sd;
-  FsFile file;
+  SdFs _sd;
+  FsFile _file;
 #else  // SD_FAT_TYPE
 #error Invalid SD_FAT_TYPE
 #endif  // SD_FAT_TYPE

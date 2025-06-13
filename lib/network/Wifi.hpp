@@ -20,7 +20,7 @@
 
 class Wifi {
  private:
-  WiFiManager wm;
+  WiFiManager _wm;
 
  public:
   Wifi();

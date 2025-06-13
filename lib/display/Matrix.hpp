@@ -20,7 +20,7 @@
 
 class Matrix {
  private:
-  MatrixPanel_I2S_DMA *dma_display = nullptr;
+  MatrixPanel_I2S_DMA *_dma_display = nullptr;
 
  public:
   Matrix();

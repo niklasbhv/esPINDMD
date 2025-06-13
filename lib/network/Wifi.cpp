@@ -20,16 +20,16 @@ Wifi::Wifi() {
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
   // set dark theme
-  wm.setClass("invert");
+  _wm.setClass("invert");
   // auto close configportal three minutes
-  wm.setConfigPortalTimeout(180);
+  _wm.setConfigPortalTimeout(180);
   // create a Wi-Fi AP
   bool res;
-  res = wm.autoConnect("esPINMDMD", "pinball");
+  res = _wm.autoConnect("esPINMDMD", "pinball");
   if (!res) {
     Serial.println("Failed to connect or hit timeout");
   } else {
     Serial.println("Connected to Wi-Fi");
   }
 }
-void Wifi::reset() { wm.resetSettings(); }
+void Wifi::reset() { _wm.resetSettings(); }

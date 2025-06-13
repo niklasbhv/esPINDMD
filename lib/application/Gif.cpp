@@ -16,10 +16,10 @@
 
 #include "Gif.hpp"
 
-Gif::Gif(Matrix &matrix) : matrix(matrix) {}
+Gif::Gif() {}
 
 // Draw a line of image directly on the LCD
-void Gif::draw(GIFDRAW *pDraw) {
+void Gif::draw(Matrix &matrix, GIFDRAW *pDraw) {
   uint8_t *s;
   uint16_t *d, *usPalette, usTemp[320];
   int x, y, iWidth;

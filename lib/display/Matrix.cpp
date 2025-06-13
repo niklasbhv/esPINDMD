@@ -27,12 +27,12 @@ Matrix::Matrix() {
                          PANEL_CHAIN   // chain length
   );
   // initialize the display
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
-  dma_display->begin();
-  dma_display->setBrightness8(90);  // 0-255
-  dma_display->clearScreen();
+  _dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  _dma_display->begin();
+  _dma_display->setBrightness8(90);  // 0-255
+  _dma_display->clearScreen();
 }
 
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
-  dma_display->drawPixel(x, y, colour);
+  _dma_display->drawPixel(x, y, colour);
 }
