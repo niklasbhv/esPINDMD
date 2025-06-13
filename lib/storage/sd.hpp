@@ -52,5 +52,5 @@ class Sd {
  public:
   Sd();
   int generateFileIndex(const char* folderPath, const char* indexFilename);
-  int loadFileIndex(const char *indexFilename);
+  int loadFileIndex(const char* indexFilename);
 };

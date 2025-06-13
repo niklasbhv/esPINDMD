@@ -80,7 +80,7 @@ int Sd::generateFileIndex(const char* folderPath, const char* indexFilename) {
 /**
  * Function used to load a index file
  */
-int Sd::loadFileIndex(const char *indexFilename) {
+int Sd::loadFileIndex(const char* indexFilename) {
   SdFile indexFile;
   if (!indexFile.open(indexFilename, O_READ)) {
     Serial.println("Failed to open index file");
