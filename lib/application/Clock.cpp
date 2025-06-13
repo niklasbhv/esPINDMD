@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-#include "clock.hpp"
+#include "Clock.hpp"
 
 #define NTP_SERVER "pool.ntp.org"
 #define SYNC_TIMEOUT_S 60

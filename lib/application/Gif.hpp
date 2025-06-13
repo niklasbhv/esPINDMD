@@ -18,7 +18,7 @@
 
 #include <AnimatedGIF.h>
 
-#include "matrix.hpp"
+#include "Matrix.hpp"
 
 class Gif {
  private:

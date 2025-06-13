@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-#include "gif.hpp"
+#include "Gif.hpp"
 
 Gif::Gif(Matrix &matrix) : matrix(matrix) {}
 

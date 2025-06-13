@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-#include "matrix.hpp"
+#include "Matrix.hpp"
 
 #define PANEL_RES_X 64  // vertical number of pixels per display
 #define PANEL_RES_Y 32  // vertical number of pixels per display

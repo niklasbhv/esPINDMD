@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-#include "sd.hpp"
+#include "Sd.hpp"
 
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_SPEED SD_SCK_MHZ(4)

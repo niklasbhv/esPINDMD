@@ -16,11 +16,11 @@
 
 #include <Arduino.h>
 
-#include "clock.hpp"
-#include "gif.hpp"
-#include "matrix.hpp"
-#include "sd.hpp"
-#include "wifi.hpp"
+#include "Clock.hpp"
+#include "Gif.hpp"
+#include "Matrix.hpp"
+#include "Sd.hpp"
+#include "Wifi.hpp"
 
 void setup() {
   // begin the serial console

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-#include "wifi.hpp"
+#include "Wifi.hpp"
 
 Wifi::Wifi() {
   // set the Wi-Fi mode
