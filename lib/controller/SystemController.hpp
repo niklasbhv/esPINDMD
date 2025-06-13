@@ -14,15 +14,20 @@
  *  limitations under the License.
  */
 
-#include <Arduino.h>
+#include "Clock.hpp"
+#include "Gif.hpp"
+#include "Matrix.hpp"
+#include "Sd.hpp"
+#include "Wifi.hpp"
 
-#include "SystemController.hpp"
+class SystemController {
+ private:
+  Clock _clock;
+  Gif _gif;
+  Sd _sd;
+  Matrix _matrix;
+  Wifi _wifi;
 
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // initialize the SystemController
-  SystemController contoller;
-}
-
-void loop() {}
+ public:
+  SystemController();
+};

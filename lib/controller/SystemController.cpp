@@ -14,15 +14,17 @@
  *  limitations under the License.
  */
 
-#include <Arduino.h>
-
 #include "SystemController.hpp"
 
-void setup() {
-  // begin the serial console
-  Serial.begin(115200);
-  // initialize the SystemController
-  SystemController contoller;
-}
-
-void loop() {}
+SystemController::SystemController() {
+  // setup the Wi-Fi configuration
+  Wifi _wifi;
+  // setup the matrix configuration
+  Matrix _matrix;
+  // setup the SD Card configuration
+  Sd _sd;
+  // setup the clock
+  Clock _clock;
+  // setup the gif class
+  Gif _gif;
+};
