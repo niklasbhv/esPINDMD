@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "Cli.hpp"
 #include "Clock.hpp"
 #include "Gif.hpp"
 #include "Matrix.hpp"
@@ -31,6 +32,7 @@ class SystemController {
   Matrix _matrix;
   Wifi _wifi;
   Mqtt _mqtt(const char* mqtt_server, uint16_t mqtt_port);
+  Cli _cli;
 
  public:
   SystemController();

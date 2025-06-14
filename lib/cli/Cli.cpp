@@ -14,21 +14,15 @@
  *  limitations under the License.
  */
 
-#include "SystemController.hpp"
+#include "Cli.hpp"
 
-SystemController::SystemController() {
-  // setup the Wi-Fi configuration
-  Wifi _wifi;
-  // setup the matrix configuration
-  Matrix _matrix;
-  // setup the SD Card configuration
-  Sd _sd;
-  // setup the clock
-  Clock _clock;
-  // setup the gif class
-  Gif _gif;
-  // setup the mqtt config
-  Mqtt _mqtt("mqtt.test.org", 1883);
-  // setup the cli
-  Cli _cli;
-};
+#include <Arduino.h>
+
+#include <ESP32WifiCLI.hpp>
+
+Cli::Cli() {
+  wcli.setSilentMode(true);  // less debug output
+
+  wcli.shell->clear();
+  wcli.begin("esPINDMD-Shell");
+}
