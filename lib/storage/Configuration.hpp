@@ -19,6 +19,7 @@
 #include <Arduino.h>
 
 #include <variant>
+#include <vector>
 
 /**
  * The configuration class is used for reading
