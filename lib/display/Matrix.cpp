@@ -48,7 +48,7 @@ Matrix::Matrix() {
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
-void Matrix::setCenteredCursorPosition(const String& text) {
+void Matrix::setCenteredCursorPosition(const String &text) {
   int16_t x, y;
   int16_t x1, y1;
   uint16_t w, h;
@@ -65,7 +65,7 @@ void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   _dma_display->drawPixel(x, y, colour);
 }
 
-void Matrix::println(const char* text, bool clear, uint16_t cursor_x,
+void Matrix::println(const char *text, bool clear, uint16_t cursor_x,
                      uint16_t cursor_y) {
   if (clear) {
     _dma_display->clearScreen();

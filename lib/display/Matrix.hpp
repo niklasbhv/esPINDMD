@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <AnimatedGIF.h>
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 
@@ -55,5 +55,5 @@ class Matrix {
   void println(const char* text, bool clear = true, uint16_t cursor_x = 0,
                uint16_t cursor_y = 0);
   void printClock(String time);
-  void drawGif(GIFDRAW *pDraw);
+  void drawGif(GIFDRAW* pDraw);
 };
