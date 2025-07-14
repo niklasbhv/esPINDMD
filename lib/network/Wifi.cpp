@@ -17,9 +17,10 @@
 #include "Wifi.hpp"
 
 Wifi::Wifi() {
-  Serial.println("Wifi: Initializing the Wi-Fi component...");
+  Serial.println("Wi-Fi: Initializing the Wi-Fi component...");
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname("esPINDMD");
   // set dark theme
   _wm.setClass("invert");
   // auto close configportal three minutes
@@ -28,10 +29,10 @@ Wifi::Wifi() {
   bool res;
   res = _wm.autoConnect("esPINMDMD", "pinball");
   if (!res) {
-    Serial.println("Failed to connect or hit timeout");
+    Serial.println("Wi-Fi: Failed to connect or hit timeout");
   } else {
-    Serial.println("Connected to Wi-Fi");
+    Serial.println("Wi-Fi: Connected to Wi-Fi");
   }
-  Serial.println("Wifi: Initialized the Wi-Fi component!");
+  Serial.println("Wi-Fi: Initialized the Wi-Fi component!");
 }
 void Wifi::reset() { _wm.resetSettings(); }
