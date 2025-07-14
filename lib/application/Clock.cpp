@@ -30,4 +30,7 @@ Clock::Clock() {
   Serial.println("Clock: Initialized the clock component!");
 }
 
-String Clock::dateTime(String format) { return timezone.dateTime(format); }
+String Clock::dateTime(String format) {
+  ezt::events();
+  return timezone.dateTime(format); 
+}
