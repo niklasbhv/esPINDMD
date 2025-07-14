@@ -20,7 +20,7 @@
 
 class SequentialIterator {
  private:
-    SdFat &_sd;
+  SdFat &_sd;
   SdFile _dir;
   bool _isOpen;
   SequentialIterator *_child;
@@ -31,6 +31,7 @@ class SequentialIterator {
     _dir.getName(name, sizeof(name));
     return name;
   }
+
  public:
   SequentialIterator(SdFat &sd, const char *path)
       : _sd(sd), _isOpen(false), _child(nullptr) {

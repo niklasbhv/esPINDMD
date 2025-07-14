@@ -17,55 +17,55 @@
 #include "GifLoader.hpp"
 
 bool SequentialIterator::next(char *fileName, size_t nameSize) {
-    // If we are in a subdirectory, check that first
-    if (_child) {
-        if (_child->next(fileName, nameSize)) {
-        return true; // Still files in subdir
-        } else {
-        delete _child;
-        _child = nullptr; // Subdir done, continue parent dir
-        }
+  // If we are in a subdirectory, check that first
+  if (_child) {
+    if (_child->next(fileName, nameSize)) {
+      return true;  // Still files in subdir
+    } else {
+      delete _child;
+      _child = nullptr;  // Subdir done, continue parent dir
     }
+  }
 
-    if (!_isOpen) return false;
+  if (!_isOpen) return false;
 
-    SdFile entry;
+  SdFile entry;
 
-    while (entry.openNext(&_dir, O_RDONLY)) {
-        if (entry.isFile()) {
-        entry.getName(fileName, nameSize);
-        entry.close();
+  while (entry.openNext(&_dir, O_RDONLY)) {
+    if (entry.isFile()) {
+      entry.getName(fileName, nameSize);
+      entry.close();
+      return true;
+    } else if (entry.isDir()) {
+      char subDirName[64];
+      entry.getName(subDirName, sizeof(subDirName));
+      Serial.print("Entering subdirectory: ");
+      Serial.println(subDirName);
+
+      // Build full subdir path
+      char subDirPath[128];
+      snprintf(subDirPath, sizeof(subDirPath), "%s/%s", _dirName(), subDirName);
+
+      // Create new iterator for subdir
+      _child = new SequentialIterator(_sd, subDirPath);
+
+      entry.close();
+
+      // Immediately get next file from subdir
+      if (_child->next(fileName, nameSize)) {
         return true;
-        } else if (entry.isDir()) {
-        char subDirName[64];
-        entry.getName(subDirName, sizeof(subDirName));
-        Serial.print("Entering subdirectory: ");
-        Serial.println(subDirName);
-
-        // Build full subdir path
-        char subDirPath[128];
-        snprintf(subDirPath, sizeof(subDirPath), "%s/%s", _dirName(), subDirName);
-
-        // Create new iterator for subdir
-        _child = new SequentialIterator(_sd, subDirPath);
-
-        entry.close();
-
-        // Immediately get next file from subdir
-        if (_child->next(fileName, nameSize)) {
-            return true;
-        } else {
-            delete _child;
-            _child = nullptr;
-        }
-        }
-        entry.close();
+      } else {
+        delete _child;
+        _child = nullptr;
+      }
     }
+    entry.close();
+  }
 
-    // Done with this directory
-    _dir.close();
-    _isOpen = false;
-    return false;
+  // Done with this directory
+  _dir.close();
+  _isOpen = false;
+  return false;
 }
 
 void IndexedIterator::next() {}
