@@ -41,7 +41,7 @@ Matrix::Matrix() {
   //mxconfig.latch_blanking = 4;
   //mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
   // initialize the display
-  _dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  _dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
   _dma_display->begin();
   _dma_display->setBrightness8(90);  // 0-255
   _dma_display->clearScreen();

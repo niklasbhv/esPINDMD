@@ -39,7 +39,7 @@
 
 class Matrix {
  private:
-  MatrixPanel_I2S_DMA *_dma_display = nullptr;
+  std::unique_ptr<MatrixPanel_I2S_DMA> _dma_display;
 
  public:
   Matrix();
