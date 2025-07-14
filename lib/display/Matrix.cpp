@@ -45,10 +45,16 @@ Matrix::Matrix() {
   _dma_display->begin();
   _dma_display->setBrightness8(90);  // 0-255
   _dma_display->clearScreen();
-  _dma_display->println("Initializing...");
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   _dma_display->drawPixel(x, y, colour);
+}
+
+void Matrix::println(const char* text, bool clear) {
+  if (clear) {
+      _dma_display->clearScreen();
+  }
+  _dma_display->println(text);
 }
