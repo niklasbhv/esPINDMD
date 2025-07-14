@@ -33,14 +33,14 @@ Matrix::Matrix() {
   mxconfig.gpio.b = B_PIN;
   mxconfig.gpio.c = C_PIN;
   mxconfig.gpio.d = D_PIN;
-  //mxconfig.gpio.e = E_PIN;
+  // mxconfig.gpio.e = E_PIN;
   mxconfig.gpio.lat = LAT_PIN;
   mxconfig.gpio.oe = OE_PIN;
   mxconfig.gpio.clk = CLK_PIN;
   mxconfig.clkphase = false;
-  //mxconfig.latch_blanking = 4;
-  //mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
-  // initialize the display
+  // mxconfig.latch_blanking = 4;
+  // mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
+  //  initialize the display
   _dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
   _dma_display->begin();
   _dma_display->setBrightness8(90);  // 0-255
@@ -52,9 +52,11 @@ void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   _dma_display->drawPixel(x, y, colour);
 }
 
-void Matrix::println(const char* text, bool clear) {
+void Matrix::println(const char* text, bool clear, uint16_t cursor_x,
+                     uint16_t cursor_y) {
   if (clear) {
-      _dma_display->clearScreen();
+    _dma_display->clearScreen();
+    _dma_display->setCursor(cursor_x, cursor_y);
   }
   _dma_display->println(text);
 }

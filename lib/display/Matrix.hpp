@@ -44,5 +44,6 @@ class Matrix {
  public:
   Matrix();
   void drawPixel(int16_t x, int16_t y, uint16_t colour);
-  void println(const char* text, bool clear);
+  void println(const char* text, bool clear = true, uint16_t cursor_x = 0,
+               uint16_t cursor_y = 0);
 };
