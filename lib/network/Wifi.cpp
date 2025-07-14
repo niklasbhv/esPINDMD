@@ -17,6 +17,7 @@
 #include "Wifi.hpp"
 
 Wifi::Wifi() {
+  Serial.println("Wifi: Initializing the Wi-Fi component...");
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
   // set dark theme
@@ -31,5 +32,6 @@ Wifi::Wifi() {
   } else {
     Serial.println("Connected to Wi-Fi");
   }
+  Serial.println("Wifi: Initialized the Wi-Fi component!");
 }
 void Wifi::reset() { _wm.resetSettings(); }
