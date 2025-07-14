@@ -48,6 +48,19 @@ Matrix::Matrix() {
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
+void Matrix::setCenteredCursorPosition(const String& text) {
+  int16_t x, y;
+  int16_t x1, y1;
+  uint16_t w, h;
+
+  _dma_display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+
+  // Center horizontally
+  x = (PANEL_RES_X * PANEL_CHAIN - w) / 2;
+  y = (PANEL_RES_Y - h) / 2 - y1;
+  _dma_display->setCursor(x, y);
+}
+
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   _dma_display->drawPixel(x, y, colour);
 }
@@ -59,4 +72,13 @@ void Matrix::println(const char* text, bool clear, uint16_t cursor_x,
     _dma_display->setCursor(cursor_x, cursor_y);
   }
   _dma_display->println(text);
+}
+
+void Matrix::printClock(String time) {
+  _dma_display->clearScreen();
+  _dma_display->setFont(&FreeMonoBold18pt7b);
+  setCenteredCursorPosition(time);
+  _dma_display->setTextColor(_dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
+  _dma_display->setTextSize(1);
+  _dma_display->println(time);
 }

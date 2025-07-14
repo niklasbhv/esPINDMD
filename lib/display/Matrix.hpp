@@ -18,6 +18,8 @@
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
+#include "Fonts/FreeMonoBold18pt7b.h"
+
 #define PANEL_RES_X 64  // vertical number of pixels per display
 #define PANEL_RES_Y 32  // vertical number of pixels per display
 #define PANEL_CHAIN 2   // number of displays
@@ -37,13 +39,19 @@
 #define OE_PIN 16
 #define CLK_PIN 15
 
+#define CLOCK_R 231
+#define CLOCK_G 103
+#define CLOCK_B 3
+
 class Matrix {
  private:
   std::unique_ptr<MatrixPanel_I2S_DMA> _dma_display;
+  void setCenteredCursorPosition(const String& text);
 
  public:
   Matrix();
   void drawPixel(int16_t x, int16_t y, uint16_t colour);
   void println(const char* text, bool clear = true, uint16_t cursor_x = 0,
                uint16_t cursor_y = 0);
+  void printClock(String time);
 };
