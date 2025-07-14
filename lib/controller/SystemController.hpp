@@ -26,14 +26,18 @@
 
 class SystemController {
  private:
-  Clock _clock;
-  Gif _gif;
-  Sd _sd;
-  Matrix _matrix;
-  Wifi _wifi;
-  Mqtt _mqtt(const char* mqtt_server, uint16_t mqtt_port);
-  Cli _cli;
+  // Hardware components
+  std::unique_ptr<Matrix> _matrix;
+  std::unique_ptr<Sd> _sd;
+  std::unique_ptr<Wifi> _wifi;
+  // Software components
+  std::unique_ptr<Clock> _clock;
+  std::unique_ptr<Gif> _gif;
+  std::unique_ptr<Mqtt> _mqtt;
+  std::unique_ptr<Cli> _cli;
 
  public:
   SystemController();
+  void begin();
+  void loop();
 };

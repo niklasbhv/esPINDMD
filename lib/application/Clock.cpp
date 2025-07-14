@@ -32,5 +32,5 @@ Clock::Clock() {
 
 String Clock::dateTime(String format) {
   ezt::events();
-  return timezone.dateTime(format); 
+  return timezone.dateTime(format);
 }

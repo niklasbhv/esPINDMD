@@ -16,19 +16,36 @@
 
 #include "SystemController.hpp"
 
-SystemController::SystemController() {
-  // setup the Wi-Fi configuration
-  Wifi _wifi;
+SystemController::SystemController(){};
+
+void SystemController::begin() {
+  Serial.println("SystemController: Initializing the hardware components...");
   // setup the matrix configuration
-  Matrix _matrix;
+  _matrix = std::make_unique<Matrix>();
+  _matrix->println("Matrix Initialized");
   // setup the SD Card configuration
-  Sd _sd;
+  _sd = std::make_unique<Sd>();
+  _matrix->println("SD Card Initialized");
+  // setup the Wi-Fi configuration
+  _wifi = std::make_unique<Wifi>();
+  _matrix->println("Wi-Fi Initialized");
+  if (WiFi.status() == WL_CONNECTED) {
+    _matrix->println(WiFi.localIP().toString().c_str());
+  }
+  Serial.println("SystemController: Initialized the hardware components!");
+  Serial.println("SystemController: Initializing the software components...");
   // setup the clock
-  Clock _clock;
+  _clock = std::make_unique<Clock>();
   // setup the gif class
-  Gif _gif;
+  _gif = std::make_unique<Gif>();
   // setup the mqtt config
-  Mqtt _mqtt("mqtt.test.org", 1883);
+  _mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
   // setup the cli
-  Cli _cli;
-};
+  _cli = std::make_unique<Cli>();
+  Serial.println("SystemController: Initialized the software components!");
+}
+
+void SystemController::loop() {
+  _matrix->printClock(_clock->dateTime("H:i"));
+  delay(5000);
+}
