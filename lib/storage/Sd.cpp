@@ -16,28 +16,21 @@
 
 #include "Sd.hpp"
 
-// defines the SPI clock speed, this is optimized for stability
-#define SPI_SPEED SD_SCK_MHZ(4)
-
-#define MAX_FILENAME_LENGTH 100
-
-// Chip select pin for the SD Card module
-const uint8_t SD_CS_PIN = 10;
-
 Sd::Sd() {
-  Serial.println("Initializing the SD Card");
+  Serial.println("SD: Initializing the sd component...");
   Serial.println("\nSPI pins:\n");
-  Serial.println("MISO: " + String(MISO));
-  Serial.println("MOSI: " + String(MOSI));
-  Serial.println("SCK:  " + String(SCK));
-  Serial.println("SS:   " + String(SS));
-#ifdef SDCARD_SS_PIN
-  Serial.println("SDCARD_SS_PIN: " + String(SDCARD_SS_PIN));
-#endif  // SDCARD_SS_PIN
+  Serial.println("MISO: " + String(SD_MISO));
+  Serial.println("MOSI: " + String(SD_MOSI));
+  Serial.println("CLK:  " + String(SD_CLK));
+  Serial.println("CS:   " + String(SD_CS));
+
+  SoftSpiDriver<SD_MISO, SD_MOSI, SD_CLK> softSpi;
+
   // try to initialize the sd card
-  if (!_sd.begin(SD_CS_PIN, SPI_SPEED)) {
-    Serial.println("SD card initialization failed!");
+  if (!_sd.begin(SD_CS, SPI_SPEED)) {
+    Serial.println("SD: Initialization of the sd component failed!");
   }
+  Serial.println("SD: Initialized the sd component!");
 }
 
 /**

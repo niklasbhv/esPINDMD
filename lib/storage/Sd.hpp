@@ -24,6 +24,16 @@
 
 #define MAX_GIF_FILES 100
 
+// defines the SPI clock speed, this is optimized for stability
+#define SPI_SPEED SD_SCK_MHZ(4)
+
+#define MAX_FILENAME_LENGTH 100
+
+#define SD_MOSI 6
+#define SD_MISO 5
+#define SD_CLK 7
+#define SD_CS 4
+
 /**
  * Class used for initialization and low level access to
  * files on the SD Card. It also features functionality
