@@ -1,8 +1,14 @@
 # esPINDMD
 
-## Disclaimer
+## Setup
 
-This project is currently WIP and thus very much incomplete and unstable.
+To setup this project, a git patch has to be applied before building using the following command from the root directory of the project.
+
+```
+bash scripts/apply_patches.sh
+```
+
+Afterwards, the project can be build like a normal platform.io project.
 
 ## Hardware
 
