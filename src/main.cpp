@@ -18,11 +18,16 @@
 
 #include "SystemController.hpp"
 
+// Global instance of the system controller
+SystemController contoller;
+
 void setup() {
   // begin the serial console
   Serial.begin(115200);
+  Serial.println("Setup: Initializing the system controller...");
   // initialize the SystemController
-  SystemController contoller;
+  contoller.begin();
+  Serial.println("Setup: Initialized the system controller!");
 }
 
-void loop() {}
+void loop() { contoller.loop(); }
