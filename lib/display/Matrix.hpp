@@ -17,6 +17,7 @@
 #pragma once
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+#include <AnimatedGIF.h>
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 
@@ -47,11 +48,12 @@ class Matrix {
  private:
   std::unique_ptr<MatrixPanel_I2S_DMA> _dma_display;
   void setCenteredCursorPosition(const String& text);
+  void drawPixel(int16_t x, int16_t y, uint16_t colour);
 
  public:
   Matrix();
-  void drawPixel(int16_t x, int16_t y, uint16_t colour);
   void println(const char* text, bool clear = true, uint16_t cursor_x = 0,
                uint16_t cursor_y = 0);
   void printClock(String time);
+  void drawGif(GIFDRAW *pDraw);
 };

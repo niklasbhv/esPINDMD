@@ -36,8 +36,6 @@ void SystemController::begin() {
   Serial.println("SystemController: Initializing the software components...");
   // setup the clock
   _clock = std::make_unique<Clock>();
-  // setup the gif class
-  _gif = std::make_unique<Gif>();
   // setup the mqtt config
   _mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
   // setup the cli

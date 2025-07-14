@@ -18,7 +18,6 @@
 
 #include "Cli.hpp"
 #include "Clock.hpp"
-#include "Gif.hpp"
 #include "Matrix.hpp"
 #include "Mqtt.hpp"
 #include "Sd.hpp"
@@ -32,7 +31,6 @@ class SystemController {
   std::unique_ptr<Wifi> _wifi;
   // Software components
   std::unique_ptr<Clock> _clock;
-  std::unique_ptr<Gif> _gif;
   std::unique_ptr<Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
 
