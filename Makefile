@@ -1,7 +1,7 @@
 # Makefile for applying clang-format to C++ files with directory exclusion support
 
 # List of directories to exclude (space-separated)
-EXCLUDE_DIRS := .github .pio .vscode doc
+EXCLUDE_DIRS := .github .pio .vscode doc lib/SdFat
 
 # File extensions to target
 EXTENSIONS := *.cpp *.cc *.h *.hpp *.cxx *.hh *.c
