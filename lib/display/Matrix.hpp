@@ -18,6 +18,25 @@
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
+#define PANEL_RES_X 64  // vertical number of pixels per display
+#define PANEL_RES_Y 32  // vertical number of pixels per display
+#define PANEL_CHAIN 2   // number of displays
+
+#define R1_PIN 36
+#define G1_PIN 37
+#define B1_PIN 38
+#define R2_PIN 40
+#define G2_PIN 41
+#define B2_PIN 42
+#define A_PIN 0
+#define B_PIN 1
+#define C_PIN 2
+#define D_PIN 3
+#define E_PIN -1
+#define LAT_PIN 18
+#define OE_PIN 16
+#define CLK_PIN 15
+
 class Matrix {
  private:
   MatrixPanel_I2S_DMA *_dma_display = nullptr;

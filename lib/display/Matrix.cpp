@@ -16,21 +16,37 @@
 
 #include "Matrix.hpp"
 
-#define PANEL_RES_X 64  // vertical number of pixels per display
-#define PANEL_RES_Y 32  // vertical number of pixels per display
-#define PANEL_CHAIN 2   // number of displays
-
 Matrix::Matrix() {
+  Serial.println("Matrix: Initizalizing the matrix component...");
   // module configuration
   HUB75_I2S_CFG mxconfig(PANEL_RES_X,  // module width
                          PANEL_RES_Y,  // module height
                          PANEL_CHAIN   // chain length
   );
+  mxconfig.gpio.r1 = R1_PIN;
+  mxconfig.gpio.g1 = G1_PIN;
+  mxconfig.gpio.b1 = B1_PIN;
+  mxconfig.gpio.r2 = R2_PIN;
+  mxconfig.gpio.g2 = G2_PIN;
+  mxconfig.gpio.b2 = B2_PIN;
+  mxconfig.gpio.a = A_PIN;
+  mxconfig.gpio.b = B_PIN;
+  mxconfig.gpio.c = C_PIN;
+  mxconfig.gpio.d = D_PIN;
+  //mxconfig.gpio.e = E_PIN;
+  mxconfig.gpio.lat = LAT_PIN;
+  mxconfig.gpio.oe = OE_PIN;
+  mxconfig.gpio.clk = CLK_PIN;
+  mxconfig.clkphase = false;
+  //mxconfig.latch_blanking = 4;
+  //mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
   // initialize the display
   _dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   _dma_display->begin();
   _dma_display->setBrightness8(90);  // 0-255
   _dma_display->clearScreen();
+  _dma_display->println("Initializing...");
+  Serial.println("Matrix: Initizalized the matrix component!");
 }
 
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
