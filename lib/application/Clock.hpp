@@ -21,6 +21,9 @@
 
 class Clock {
  private:
+  Timezone timezone;
+
  public:
   Clock();
+  String dateTime(String format);
 };

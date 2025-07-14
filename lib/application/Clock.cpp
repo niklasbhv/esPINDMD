@@ -17,11 +17,17 @@
 #include "Clock.hpp"
 
 #define NTP_SERVER "pool.ntp.org"
+#define TIMEZONE "Europe/Berlin"
 #define SYNC_TIMEOUT_S 60
 
 Clock::Clock() {
-  Serial.println("Initializing the clock");
-  setServer(NTP_SERVER);
-  Serial.println("Syncing with NTP server: " + String(NTP_SERVER));
-  waitForSync(SYNC_TIMEOUT_S);
+  Serial.println("Clock: Initializing the clock component...");
+  ezt::setServer(NTP_SERVER);
+  Serial.println("Clock: Syncing with NTP server: " + String(NTP_SERVER));
+  ezt::setInterval(SYNC_TIMEOUT_S);
+  ezt::waitForSync();
+  timezone.setLocation(TIMEZONE);
+  Serial.println("Clock: Initialized the clock component!");
 }
+
+String Clock::dateTime(String format) { return timezone.dateTime(format); }
