@@ -35,12 +35,12 @@ class SequentialIterator {
  public:
   SequentialIterator(SdFat &sd, const char *path)
       : _sd(sd), _isOpen(false), _child(nullptr) {
-    if (_dir.open(path)) {
-      _isOpen = true;
-    } else {
-      Serial.print("Failed to open directory: ");
-      Serial.println(path);
-    }
+    //if (_dir.open()) {
+    //  _isOpen = true;
+    //} else {
+    //  Serial.print("Failed to open directory: ");
+    //  Serial.println(path);
+    //}
   }
   ~SequentialIterator() {
     if (_child) {

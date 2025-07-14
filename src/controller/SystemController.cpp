@@ -16,6 +16,10 @@
 
 #include "SystemController.hpp"
 
+#define SHOW_CLOCK_MS 5000
+
+#define GIF_ROOT_PATH "/gif"
+
 SystemController::SystemController(){};
 
 void SystemController::begin() {
@@ -40,10 +44,15 @@ void SystemController::begin() {
   _mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
   // setup the cli
   _cli = std::make_unique<Cli>();
+  // setup the file iterator
+  //_sequentialIterator = std::make_unique<SequentialIterator>(,GIF_ROOT_PATH);
   Serial.println("SystemController: Initialized the software components!");
 }
 
 void SystemController::loop() {
   _matrix->printClock(_clock->dateTime("H:i"));
-  delay(5000);
+  delay(SHOW_CLOCK_MS);
+  char* filename;
+  size_t filename_size;
+  //_sequentialIterator->next(filename, filename_size);
 }

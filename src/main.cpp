@@ -16,7 +16,7 @@
 
 #include <Arduino.h>
 
-#include "SystemController.hpp"
+#include "controller/SystemController.hpp"
 
 // Global instance of the system controller
 SystemController contoller;

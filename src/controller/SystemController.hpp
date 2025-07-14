@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include "Cli.hpp"
-#include "Clock.hpp"
-#include "Matrix.hpp"
-#include "Mqtt.hpp"
-#include "Sd.hpp"
-#include "Wifi.hpp"
+#include "cli/Cli.hpp"
+#include "application/Clock.hpp"
+#include "display/Matrix.hpp"
+#include "network/Mqtt.hpp"
+#include "storage/Sd.hpp"
+#include "network/Wifi.hpp"
+#include "storage/GifLoader.hpp"
 
 class SystemController {
  private:
@@ -33,6 +34,8 @@ class SystemController {
   std::unique_ptr<Clock> _clock;
   std::unique_ptr<Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
+  std::unique_ptr<SequentialIterator> _sequentialIterator;
+  std::unique_ptr<SequentialIterator> _indexedIterator;
 
  public:
   SystemController();
