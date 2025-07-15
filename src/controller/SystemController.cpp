@@ -18,8 +18,6 @@
 
 #define SHOW_CLOCK_MS 5000
 
-#define GIF_ROOT_PATH "/gif"
-
 SystemController::SystemController(){};
 
 void SystemController::begin() {
@@ -41,11 +39,9 @@ void SystemController::begin() {
   // setup the clock
   _clock = std::make_unique<Clock>();
   // setup the mqtt config
-  _mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
+  //_mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
   // setup the cli
-  _cli = std::make_unique<Cli>();
-  // setup the file iterator
-  //_sequentialIterator = std::make_unique<SequentialIterator>(,GIF_ROOT_PATH);
+  //_cli = std::make_unique<Cli>();
   Serial.println("SystemController: Initialized the software components!");
 }
 
@@ -53,10 +49,14 @@ void SystemController::loop() {
   _matrix->printClock(_clock->dateTime("H:i"));
   delay(SHOW_CLOCK_MS);
   String filename;
-  _sequentialIterator->next(filename);
+  Serial.println("1");
+  _sd->next(filename);
   FsFile gif_file;
+  Serial.println("2");
   _sd->openFile(filename, gif_file);
   AnimatedGIF gif;
+  Serial.println("3");
   _matrix->drawGifFile(gif_file, gif);
   _sd->closeFile(gif_file);
+  Serial.println("4");
 }

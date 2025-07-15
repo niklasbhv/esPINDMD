@@ -21,7 +21,6 @@
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
-#include "storage/GifLoader.hpp"
 #include "storage/Sd.hpp"
 
 class SystemController {
@@ -34,8 +33,6 @@ class SystemController {
   std::unique_ptr<Clock> _clock;
   std::unique_ptr<Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
-  std::unique_ptr<SequentialIterator> _sequentialIterator;
-  std::unique_ptr<SequentialIterator> _indexedIterator;
 
  public:
   SystemController();

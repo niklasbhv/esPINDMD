@@ -30,6 +30,7 @@ Sd::Sd() {
   if (!_sd.begin(SD_CS, SPI_SPEED)) {
     Serial.println("SD: Initialization of the sd component failed!");
   }
+  _sequentialIterator = std::make_unique<SequentialIterator>(_sd, GIF_ROOT_PATH);
   Serial.println("SD: Initialized the sd component!");
 }
 
@@ -99,3 +100,64 @@ bool Sd::openFile(String& filename, FsFile& file) {
 }
 
 bool Sd::closeFile(FsFile& file) { return file.close(); }
+
+bool SequentialIterator::next(String filename) {
+  // If we are in a subdirectory, check that first
+  if (_child) {
+    if (_child->next(filename)) {
+      return true;  // Still files in subdir
+    } else {
+      delete _child;
+      _child = nullptr;  // Subdir done, continue parent dir
+    }
+  }
+
+  if (!_isOpen) return false;
+
+  SdFile entry;
+
+  while (entry.openNext(&_dir, O_RDONLY)) {
+    if (entry.isFile()) {
+      char* filename_buffer;
+      size_t filename_buffer_size;
+      entry.getName(filename_buffer, filename_buffer_size);
+      std::string filename(filename_buffer, filename_buffer_size);
+      entry.close();
+      return true;
+    } else if (entry.isDir()) {
+      char subDirName[64];
+      entry.getName(subDirName, sizeof(subDirName));
+      Serial.print("Entering subdirectory: ");
+      Serial.println(subDirName);
+
+      // Build full subdir path
+      char subDirPath[128];
+      snprintf(subDirPath, sizeof(subDirPath), "%s/%s", _dirName(), subDirName);
+
+      // Create new iterator for subdir
+      _child = new SequentialIterator(_sd, subDirPath);
+
+      entry.close();
+
+      // Immediately get next file from subdir
+      if (_child->next(filename)) {
+        return true;
+      } else {
+        delete _child;
+        _child = nullptr;
+      }
+    }
+    entry.close();
+  }
+
+  // Done with this directory
+  _dir.close();
+  _isOpen = false;
+  return false;
+}
+
+bool Sd::next(String filename) {
+  return _sequentialIterator->next(filename);
+}
+
+void IndexedIterator::next() {}

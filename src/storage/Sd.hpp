@@ -19,8 +19,11 @@
 #include <AnimatedGIF.h>
 #include <SPI.h>
 #include <SdFat.h>
+#include <string>
+#include <memory>
 
 #define MAX_GIF_FILES 100
+#define GIF_ROOT_PATH "/gif"
 
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_SPEED SD_SCK_MHZ(4)
@@ -32,6 +35,47 @@
 #define SD_CLK 7
 #define SD_CS 4
 
+class SequentialIterator {
+ private:
+  SdFat &_sd;
+  SdFile _dir;
+  bool _isOpen;
+  SequentialIterator *_child;
+
+  // Helper: get path of current directory (if possible)
+  const char *_dirName() {
+    static char name[64];
+    _dir.getName(name, sizeof(name));
+    return name;
+  }
+
+ public:
+  SequentialIterator(SdFat &sd, const char *path)
+      : _sd(sd), _isOpen(false), _child(nullptr) {
+    if (_dir.open(path)) {
+      _isOpen = true;
+    } else {
+      Serial.print("Failed to open directory: ");
+      Serial.println(path);
+    }
+  }
+  ~SequentialIterator() {
+    if (_child) {
+      delete _child;
+    }
+    if (_isOpen) {
+      _dir.close();
+    }
+  }
+  bool next(String filename);
+};
+
+class IndexedIterator {
+ private:
+ public:
+  void next();
+};
+
 /**
  * Class used for initialization and low level access to
  * files on the SD Card. It also features functionality
@@ -42,6 +86,8 @@ class Sd {
   String _gifFiles[MAX_GIF_FILES];
   int _gifCount = 0;
   SdFs _sd;
+  std::unique_ptr<SequentialIterator> _sequentialIterator;
+  std::unique_ptr<IndexedIterator> _indexedIterator;
 
  public:
   Sd();
@@ -49,4 +95,5 @@ class Sd {
   int loadFileIndex(const char* indexFilename);
   bool openFile(String& filename, FsFile& file);
   bool closeFile(FsFile& file);
+  bool next(String filename);
 };
