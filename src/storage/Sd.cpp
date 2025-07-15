@@ -93,3 +93,9 @@ int Sd::loadFileIndex(const char* indexFilename) {
 
   return 0;
 }
+
+bool Sd::openFile(String& filename, FsFile& file) {
+  return file.open(filename.c_str(), O_READ);
+}
+
+bool Sd::closeFile(FsFile& file) { return file.close(); }

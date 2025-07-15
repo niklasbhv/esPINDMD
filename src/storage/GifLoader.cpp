@@ -16,10 +16,10 @@
 
 #include "GifLoader.hpp"
 
-bool SequentialIterator::next(char *fileName, size_t nameSize) {
+bool SequentialIterator::next(String filename) {
   // If we are in a subdirectory, check that first
   if (_child) {
-    if (_child->next(fileName, nameSize)) {
+    if (_child->next(filename)) {
       return true;  // Still files in subdir
     } else {
       delete _child;
@@ -33,7 +33,10 @@ bool SequentialIterator::next(char *fileName, size_t nameSize) {
 
   while (entry.openNext(&_dir, O_RDONLY)) {
     if (entry.isFile()) {
-      entry.getName(fileName, nameSize);
+      char* filename_buffer;
+      size_t filename_buffer_size;
+      entry.getName(filename_buffer, filename_buffer_size);
+      std::string filename(filename_buffer, filename_buffer_size);
       entry.close();
       return true;
     } else if (entry.isDir()) {
@@ -52,7 +55,7 @@ bool SequentialIterator::next(char *fileName, size_t nameSize) {
       entry.close();
 
       // Immediately get next file from subdir
-      if (_child->next(fileName, nameSize)) {
+      if (_child->next(filename)) {
         return true;
       } else {
         delete _child;

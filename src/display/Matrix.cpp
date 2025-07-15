@@ -152,3 +152,11 @@ void Matrix::drawGif(GIFDRAW *pDraw) {
     }
   }
 }
+
+bool Matrix::drawGifFile(FsFile &file, AnimatedGIF &gif) {
+  if (!gif.open((uint8_t *)&file, file.size(), drawGifCallback)) {
+    Serial.println("SD: Failed to read GIF!");
+    return false;
+  }
+  return true;
+}

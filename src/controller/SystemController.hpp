@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include "cli/Cli.hpp"
 #include "application/Clock.hpp"
+#include "cli/Cli.hpp"
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
-#include "storage/Sd.hpp"
 #include "network/Wifi.hpp"
 #include "storage/GifLoader.hpp"
+#include "storage/Sd.hpp"
 
 class SystemController {
  private:

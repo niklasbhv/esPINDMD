@@ -52,7 +52,11 @@ void SystemController::begin() {
 void SystemController::loop() {
   _matrix->printClock(_clock->dateTime("H:i"));
   delay(SHOW_CLOCK_MS);
-  char* filename;
-  size_t filename_size;
-  //_sequentialIterator->next(filename, filename_size);
+  String filename;
+  _sequentialIterator->next(filename);
+  FsFile gif_file;
+  _sd->openFile(filename, gif_file);
+  AnimatedGIF gif;
+  _matrix->drawGifFile(gif_file, gif);
+  _sd->closeFile(gif_file);
 }

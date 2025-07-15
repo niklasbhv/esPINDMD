@@ -16,11 +16,9 @@
 
 #pragma once
 
+#include <AnimatedGIF.h>
 #include <SPI.h>
 #include <SdFat.h>
-
-// defines compatibility for FAT16, FAT32 and exFAT
-#define SD_FAT_TYPE 3
 
 #define MAX_GIF_FILES 100
 
@@ -43,24 +41,12 @@ class Sd {
  private:
   String _gifFiles[MAX_GIF_FILES];
   int _gifCount = 0;
-#if SD_FAT_TYPE == 0
-  SdFat _sd;
-  File _file;
-#elif SD_FAT_TYPE == 1
-  SdFat32 _sd;
-  File32 _file;
-#elif SD_FAT_TYPE == 2
-  SdExFat _sd;
-  ExFile _file;
-#elif SD_FAT_TYPE == 3
   SdFs _sd;
-  FsFile _file;
-#else  // SD_FAT_TYPE
-#error Invalid SD_FAT_TYPE
-#endif  // SD_FAT_TYPE
 
  public:
   Sd();
   int generateFileIndex(const char* folderPath, const char* indexFilename);
   int loadFileIndex(const char* indexFilename);
+  bool openFile(String& filename, FsFile& file);
+  bool closeFile(FsFile& file);
 };
