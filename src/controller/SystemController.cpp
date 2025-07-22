@@ -22,22 +22,25 @@ SystemController::SystemController(){};
 
 void SystemController::begin() {
   Serial.println("SystemController: Initializing the hardware components...");
+  delay(5000);
   // setup the matrix configuration
-  _matrix = std::make_unique<Matrix>();
-  _matrix->println("Matrix Initialized");
+  Matrix::begin();
+  Matrix::println("Matrix Initialized");
   // setup the SD Card configuration
   _sd = std::make_unique<Sd>();
-  _matrix->println("SD Card Initialized");
+  Matrix::println("SD Card Initialized");
   // setup the Wi-Fi configuration
   _wifi = std::make_unique<Wifi>();
-  _matrix->println("Wi-Fi Initialized");
+  Matrix::println("Wi-Fi Initialized");
   if (WiFi.status() == WL_CONNECTED) {
-    _matrix->println(WiFi.localIP().toString().c_str());
+    Matrix::println(WiFi.localIP().toString().c_str());
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
   // setup the clock
   _clock = std::make_unique<Clock>();
+  // setup the gif library
+  _gif.begin(LITTLE_ENDIAN_PIXELS);
   // setup the mqtt config
   //_mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
   // setup the cli
@@ -45,18 +48,26 @@ void SystemController::begin() {
   Serial.println("SystemController: Initialized the software components!");
 }
 
+bool SystemController::displayGif(String& filename) {
+  if (!_gif.open(filename.c_str(), Sd::openGifFile, Sd::closeGifFile,
+                 Sd::readGifFile, Sd::seekGifFile, Matrix::drawGif)) {
+    Serial.println("SD: Failed to read GIF!");
+    return false;
+  } else {
+    dma_display->clearScreen();
+    while (_gif.playFrame(true, NULL)) {
+    }
+    _gif.close();
+  }
+  return true;
+}
+
 void SystemController::loop() {
-  _matrix->printClock(_clock->dateTime("H:i"));
+  Matrix::printClock(_clock->dateTime("H:i"));
   delay(SHOW_CLOCK_MS);
   String filename;
-  Serial.println("1");
-  _sd->next(filename);
-  FsFile gif_file;
-  Serial.println("2");
-  _sd->openFile(filename, gif_file);
-  AnimatedGIF gif;
-  Serial.println("3");
-  _matrix->drawGifFile(gif_file, gif);
-  _sd->closeFile(gif_file);
-  Serial.println("4");
+  if (!_sd->next(filename)) {
+    Serial.println("SD: No Gifs available!");
+  }
+  displayGif(filename);
 }

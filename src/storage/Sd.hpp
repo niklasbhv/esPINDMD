@@ -19,7 +19,7 @@
 #include <AnimatedGIF.h>
 #include <SPI.h>
 #include <SdFat.h>
-#include <string>
+
 #include <memory>
 
 #define MAX_GIF_FILES 100
@@ -37,8 +37,8 @@
 
 class SequentialIterator {
  private:
-  SdFat &_sd;
-  SdFile _dir;
+  SdFs &_sd;
+  FsFile _dir;
   bool _isOpen;
   SequentialIterator *_child;
 
@@ -50,12 +50,12 @@ class SequentialIterator {
   }
 
  public:
-  SequentialIterator(SdFat &sd, const char *path)
+  SequentialIterator(SdFs &sd, const char *path)
       : _sd(sd), _isOpen(false), _child(nullptr) {
     if (_dir.open(path)) {
       _isOpen = true;
     } else {
-      Serial.print("Failed to open directory: ");
+      Serial.print("SequentialIterator: Failed to open directory: ");
       Serial.println(path);
     }
   }
@@ -67,7 +67,7 @@ class SequentialIterator {
       _dir.close();
     }
   }
-  bool next(String filename);
+  bool next(String &file_path);
 };
 
 class IndexedIterator {
@@ -75,6 +75,11 @@ class IndexedIterator {
  public:
   void next();
 };
+
+// Global instances of sd card component objects
+// Needed because of a limitation of the AnimationGIF library
+inline SdFs sd;
+inline FsFile file;
 
 /**
  * Class used for initialization and low level access to
@@ -85,15 +90,19 @@ class Sd {
  private:
   String _gifFiles[MAX_GIF_FILES];
   int _gifCount = 0;
-  SdFs _sd;
   std::unique_ptr<SequentialIterator> _sequentialIterator;
   std::unique_ptr<IndexedIterator> _indexedIterator;
 
  public:
   Sd();
-  int generateFileIndex(const char* folderPath, const char* indexFilename);
-  int loadFileIndex(const char* indexFilename);
-  bool openFile(String& filename, FsFile& file);
-  bool closeFile(FsFile& file);
-  bool next(String filename);
+  int generateFileIndex(const char *folderPath, const char *indexFilename);
+  int loadFileIndex(const char *indexFilename);
+  bool openFile(String &filename, FsFile &file);
+  bool closeFile(FsFile &file);
+  bool next(String &filename);
+  // Static functions for use with the AnimatedGIF library
+  static void *openGifFile(const char *fname, int32_t *pSize);
+  static void closeGifFile(void *pHandle);
+  static int32_t readGifFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
+  static int32_t seekGifFile(GIFFILE *pFile, int32_t iPosition);
 };

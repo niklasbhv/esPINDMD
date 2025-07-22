@@ -16,29 +16,32 @@
 
 #include "Sd.hpp"
 
+#define MAX_FILENAME_SIZE 100
+
+SoftSpiDriver<SD_MISO, SD_MOSI, SD_CLK> softSpi;
+#define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi)
+
 Sd::Sd() {
   Serial.println("SD: Initializing the sd component...");
-  Serial.println("\nSPI pins:\n");
+  Serial.println("\nSD SPI pins:\n");
   Serial.println("MISO: " + String(SD_MISO));
   Serial.println("MOSI: " + String(SD_MOSI));
   Serial.println("CLK:  " + String(SD_CLK));
   Serial.println("CS:   " + String(SD_CS));
 
-  SoftSpiDriver<SD_MISO, SD_MOSI, SD_CLK> softSpi;
-
   // try to initialize the sd card
-  if (!_sd.begin(SD_CS, SPI_SPEED)) {
+  if (!sd.begin(SD_CONFIG)) {
     Serial.println("SD: Initialization of the sd component failed!");
   }
-  _sequentialIterator = std::make_unique<SequentialIterator>(_sd, GIF_ROOT_PATH);
+  _sequentialIterator = std::make_unique<SequentialIterator>(sd, GIF_ROOT_PATH);
   Serial.println("SD: Initialized the sd component!");
 }
 
 /**
  * Pre-processing a index to enable randomized playback of gifs
  */
-int Sd::generateFileIndex(const char* folderPath, const char* indexFilename) {
-  SdFile dir, entry, indexFile;
+int Sd::generateFileIndex(const char *folderPath, const char *indexFilename) {
+  FsFile dir, entry, indexFile;
 
   if (!dir.open(folderPath)) {
     Serial.println("Failed to open folder");
@@ -74,8 +77,8 @@ int Sd::generateFileIndex(const char* folderPath, const char* indexFilename) {
 /**
  * Function used to load a index file
  */
-int Sd::loadFileIndex(const char* indexFilename) {
-  SdFile indexFile;
+int Sd::loadFileIndex(const char *indexFilename) {
+  FsFile indexFile;
   if (!indexFile.open(indexFilename, O_READ)) {
     Serial.println("Failed to open index file");
     return -1;
@@ -95,13 +98,13 @@ int Sd::loadFileIndex(const char* indexFilename) {
   return 0;
 }
 
-bool Sd::openFile(String& filename, FsFile& file) {
+bool Sd::openFile(String &filename, FsFile &file) {
   return file.open(filename.c_str(), O_READ);
 }
 
-bool Sd::closeFile(FsFile& file) { return file.close(); }
+bool Sd::closeFile(FsFile &file) { return file.close(); }
 
-bool SequentialIterator::next(String filename) {
+bool SequentialIterator::next(String &filename) {
   // If we are in a subdirectory, check that first
   if (_child) {
     if (_child->next(filename)) {
@@ -114,14 +117,14 @@ bool SequentialIterator::next(String filename) {
 
   if (!_isOpen) return false;
 
-  SdFile entry;
+  FsFile entry;
 
   while (entry.openNext(&_dir, O_RDONLY)) {
     if (entry.isFile()) {
-      char* filename_buffer;
-      size_t filename_buffer_size;
-      entry.getName(filename_buffer, filename_buffer_size);
-      std::string filename(filename_buffer, filename_buffer_size);
+      char filename_buffer[MAX_FILENAME_SIZE];
+      size_t filename_size =
+          entry.getName(filename_buffer, sizeof(filename_buffer));
+      filename = String(filename_buffer, filename_size);
       entry.close();
       return true;
     } else if (entry.isDir()) {
@@ -135,7 +138,7 @@ bool SequentialIterator::next(String filename) {
       snprintf(subDirPath, sizeof(subDirPath), "%s/%s", _dirName(), subDirName);
 
       // Create new iterator for subdir
-      _child = new SequentialIterator(_sd, subDirPath);
+      _child = new SequentialIterator(sd, subDirPath);
 
       entry.close();
 
@@ -156,8 +159,48 @@ bool SequentialIterator::next(String filename) {
   return false;
 }
 
-bool Sd::next(String filename) {
-  return _sequentialIterator->next(filename);
+bool Sd::next(String &file_path) {
+  String filename;
+  bool success = _sequentialIterator->next(filename);
+  file_path.clear();
+  file_path.concat(GIF_ROOT_PATH);
+  file_path.concat("/");
+  file_path.concat(filename);
+  return success;
 }
 
 void IndexedIterator::next() {}
+
+void *Sd::openGifFile(const char *fname, int32_t *pSize) {
+  file = sd.open(fname);
+  if (file) {
+    *pSize = file.size();
+    return (void *)&file;
+  }
+  return NULL;
+}
+
+void Sd::closeGifFile(void *pHandle) {
+  FsFile *file = static_cast<FsFile *>(pHandle);
+  if (file != NULL) file->close();
+}
+
+int32_t Sd::readGifFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
+  int32_t iBytesRead;
+  iBytesRead = iLen;
+  FsFile *file = static_cast<FsFile *>(pFile->fHandle);
+  // Note: If you read a file all the way to the last byte, seek() stops working
+  if ((pFile->iSize - pFile->iPos) < iLen)
+    iBytesRead = pFile->iSize - pFile->iPos - 1;  // <-- ugly work-around
+  if (iBytesRead <= 0) return 0;
+  iBytesRead = (int32_t)file->read(pBuf, iBytesRead);
+  pFile->iPos = file->position();
+  return iBytesRead;
+}
+
+int32_t Sd::seekGifFile(GIFFILE *pFile, int32_t iPosition) {
+  FsFile *file = static_cast<FsFile *>(pFile->fHandle);
+  file->seek(iPosition);
+  pFile->iPos = (int32_t)file->position();
+  return pFile->iPos;
+}

@@ -22,9 +22,14 @@
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 
-#define PANEL_RES_X 64  // vertical number of pixels per display
-#define PANEL_RES_Y 32  // vertical number of pixels per display
-#define PANEL_CHAIN 2   // number of displays
+#define PANEL_RES_X 64   // vertical number of pixels per display
+#define PANEL_RES_Y 32   // vertical number of pixels per display
+#define PANEL_COUNT_X 2  // number of displays on the x axis
+#define PANEL_COUNT_Y 1  // Number of displays on the y axis
+
+#define PANEL_WIDTH PANEL_RES_X* PANEL_COUNT_X
+#define PANEL_HEIGHT PANEL_RES_Y* PANEL_COUNT_Y
+#define PANEL_CHAIN PANEL_COUNT_X + PANEL_COUNT_Y - 1
 
 #define R1_PIN 36
 #define G1_PIN 37
@@ -45,23 +50,22 @@
 #define CLOCK_G 103
 #define CLOCK_B 3
 
+// Global instance of the dma_display
+// Needed because of a limitation of the AnimationGIF library
+inline std::unique_ptr<MatrixPanel_I2S_DMA> dma_display;
+
 class Matrix {
  private:
-  std::unique_ptr<MatrixPanel_I2S_DMA> _dma_display;
-  void setCenteredCursorPosition(const String& text);
-  void drawPixel(int16_t x, int16_t y, uint16_t colour);
-  void drawGif(GIFDRAW* pDraw);
+  static void setCenteredCursorPosition(const String& text);
+  static void drawPixel(int16_t x, int16_t y, uint16_t colour);
 
  public:
-  Matrix();
-  void println(const char* text, bool clear = true, uint16_t cursor_x = 0,
-               uint16_t cursor_y = 0);
-  void printClock(String time);
-  bool drawGifFile(FsFile& file, AnimatedGIF& gif);
-  static void drawGifCallback(GIFDRAW* pDraw) {
-    Matrix* matrix = static_cast<Matrix*>(pDraw->pUser);
-    if (matrix) {
-      matrix->drawGif(pDraw);
-    }
-  }
+  static void begin();
+  static void println(const char* text, bool clear = true,
+                      uint16_t cursor_x = 0, uint16_t cursor_y = 0);
+  static void printClock(String time);
+  static void drawGif(GIFDRAW* pDraw);
+
+  // Disallow creating an instance of this object
+  Matrix() = delete;
 };

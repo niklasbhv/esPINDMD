@@ -26,13 +26,15 @@
 class SystemController {
  private:
   // Hardware components
-  std::unique_ptr<Matrix> _matrix;
   std::unique_ptr<Sd> _sd;
   std::unique_ptr<Wifi> _wifi;
   // Software components
   std::unique_ptr<Clock> _clock;
   std::unique_ptr<Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
+  AnimatedGIF _gif;
+
+  bool displayGif(String& filename);
 
  public:
   SystemController();

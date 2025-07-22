@@ -16,7 +16,7 @@
 
 #include "Matrix.hpp"
 
-Matrix::Matrix() {
+void Matrix::begin() {
   Serial.println("Matrix: Initizalizing the matrix component...");
   // module configuration
   HUB75_I2S_CFG mxconfig(PANEL_RES_X,  // module width
@@ -41,10 +41,10 @@ Matrix::Matrix() {
   // mxconfig.latch_blanking = 4;
   // mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
   //  initialize the display
-  _dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
-  _dma_display->begin();
-  _dma_display->setBrightness8(90);  // 0-255
-  _dma_display->clearScreen();
+  dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
+  dma_display->begin();
+  dma_display->setBrightness8(90);  // 0-255
+  dma_display->clearScreen();
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
@@ -53,40 +53,43 @@ void Matrix::setCenteredCursorPosition(const String &text) {
   int16_t x1, y1;
   uint16_t w, h;
 
-  _dma_display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  dma_display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
 
   // Center horizontally
-  x = (PANEL_RES_X * PANEL_CHAIN - w) / 2;
-  y = (PANEL_RES_Y - h) / 2 - y1;
-  _dma_display->setCursor(x, y);
+  x = (PANEL_WIDTH - w) / 2;
+  y = (PANEL_HEIGHT - h) / 2 - y1;
+  dma_display->setCursor(x, y);
 }
 
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
-  _dma_display->drawPixel(x, y, colour);
+  dma_display->drawPixel(x, y, colour);
 }
 
 void Matrix::println(const char *text, bool clear, uint16_t cursor_x,
                      uint16_t cursor_y) {
   if (clear) {
-    _dma_display->clearScreen();
-    _dma_display->setCursor(cursor_x, cursor_y);
+    dma_display->clearScreen();
+    dma_display->setCursor(cursor_x, cursor_y);
   }
-  _dma_display->println(text);
+  dma_display->println(text);
 }
 
 void Matrix::printClock(String time) {
-  _dma_display->clearScreen();
-  _dma_display->setFont(&FreeMonoBold18pt7b);
+  dma_display->clearScreen();
+  dma_display->setFont(&FreeMonoBold18pt7b);
   setCenteredCursorPosition(time);
-  _dma_display->setTextColor(_dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
-  _dma_display->setTextSize(1);
-  _dma_display->println(time);
+  dma_display->setTextColor(dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
+  dma_display->setTextSize(1);
+  dma_display->println(time);
 }
 
 void Matrix::drawGif(GIFDRAW *pDraw) {
   uint8_t *s;
   uint16_t *d, *usPalette, usTemp[320];
   int x, y, iWidth;
+
+  iWidth = pDraw->iWidth;
+  if (iWidth > PANEL_WIDTH) iWidth = PANEL_WIDTH;
 
   usPalette = pDraw->pPalette;
   y = pDraw->iY + pDraw->y;  // current line
@@ -124,7 +127,8 @@ void Matrix::drawGif(GIFDRAW *pDraw) {
       if (iCount)  // any opaque pixels?
       {
         for (int xOffset = 0; xOffset < iCount; xOffset++) {
-          drawPixel(x + xOffset + pDraw->iX, y, usTemp[xOffset]);
+          drawPixel(x + xOffset, y,
+                    usTemp[xOffset]);  // 565 Color Format
         }
         x += iCount;
         iCount = 0;
@@ -143,20 +147,13 @@ void Matrix::drawGif(GIFDRAW *pDraw) {
         iCount = 0;
       }
     }
-  } else {
+  } else  // does not have transparency
+  {
     s = pDraw->pPixels;
     // Translate the 8-bit pixels through the RGB565 palette (already byte
     // reversed)
     for (x = 0; x < pDraw->iWidth; x++) {
-      drawPixel(x + pDraw->iX, y, usPalette[*s++]);
+      drawPixel(x, y, usPalette[*s++]);  // color 565
     }
   }
-}
-
-bool Matrix::drawGifFile(FsFile &file, AnimatedGIF &gif) {
-  if (!gif.open((uint8_t *)&file, file.size(), drawGifCallback)) {
-    Serial.println("SD: Failed to read GIF!");
-    return false;
-  }
-  return true;
 }
