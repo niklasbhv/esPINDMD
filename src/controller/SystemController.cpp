@@ -42,9 +42,9 @@ void SystemController::begin() {
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   // setup the mqtt config
-  //_mqtt = std::make_unique<Mqtt>("mqtt.test.org", 1883);
+  // _mqtt = std::make_unique<Mqtt>(MQTT_SERVER, MQTT_SERVER_PORT);
   // setup the cli
-  //_cli = std::make_unique<Cli>();
+  _cli = std::make_unique<Cli>();
   Serial.println("SystemController: Initialized the software components!");
 }
 
@@ -67,7 +67,9 @@ void SystemController::loop() {
   delay(SHOW_CLOCK_MS);
   String filename;
   if (!_sd->next(filename)) {
-    Serial.println("SD: No Gifs available!");
+    Serial.println("SystemController: Iterater exhausted, resetting the iterator!");
+    _sd->resetIterator();
+  } else {
+      displayGif(filename);
   }
-  displayGif(filename);
 }

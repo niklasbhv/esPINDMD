@@ -23,12 +23,12 @@
 #include <memory>
 
 #define MAX_GIF_FILES 100
+#define MAX_FILENAME_LENGTH 64
+#define MAX_DIRNAME_LENGTH 64
 #define GIF_ROOT_PATH "/gif"
 
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_SPEED SD_SCK_MHZ(4)
-
-#define MAX_FILENAME_LENGTH 100
 
 #define SD_MOSI 6
 #define SD_MISO 5
@@ -40,19 +40,13 @@ class SequentialIterator {
   SdFs &_sd;
   FsFile _dir;
   bool _isOpen;
+  String _path;
   SequentialIterator *_child;
 
-  // Helper: get path of current directory (if possible)
-  const char *_dirName() {
-    static char name[64];
-    _dir.getName(name, sizeof(name));
-    return name;
-  }
-
  public:
-  SequentialIterator(SdFs &sd, const char *path)
-      : _sd(sd), _isOpen(false), _child(nullptr) {
-    if (_dir.open(path)) {
+  SequentialIterator(SdFs &sd, String path)
+      : _sd(sd), _isOpen(false), _child(nullptr), _path(path) {
+    if (_dir.open(path.c_str())) {
       _isOpen = true;
     } else {
       Serial.print("SequentialIterator: Failed to open directory: ");
@@ -99,6 +93,7 @@ class Sd {
   int loadFileIndex(const char *indexFilename);
   bool openFile(String &filename, FsFile &file);
   bool closeFile(FsFile &file);
+  void resetIterator();
   bool next(String &filename);
   // Static functions for use with the AnimatedGIF library
   static void *openGifFile(const char *fname, int32_t *pSize);

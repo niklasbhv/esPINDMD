@@ -16,8 +16,6 @@
 
 #include "Sd.hpp"
 
-#define MAX_FILENAME_SIZE 100
-
 SoftSpiDriver<SD_MISO, SD_MOSI, SD_CLK> softSpi;
 #define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi)
 
@@ -120,26 +118,22 @@ bool SequentialIterator::next(String &filename) {
   FsFile entry;
 
   while (entry.openNext(&_dir, O_RDONLY)) {
+    // Check if the entry is a file
     if (entry.isFile()) {
-      char filename_buffer[MAX_FILENAME_SIZE];
+      char filename_buffer[MAX_FILENAME_LENGTH];
       size_t filename_size =
           entry.getName(filename_buffer, sizeof(filename_buffer));
-      filename = String(filename_buffer, filename_size);
+      filename = String(_path + "/" + String(filename_buffer, filename_size));
       entry.close();
       return true;
-    } else if (entry.isDir()) {
-      char subDirName[64];
+    } 
+    // Check if the entry is a directory
+    else if (entry.isDir()) {
+      char subDirName[MAX_DIRNAME_LENGTH];
       entry.getName(subDirName, sizeof(subDirName));
-      Serial.print("Entering subdirectory: ");
-      Serial.println(subDirName);
-
-      // Build full subdir path
-      char subDirPath[128];
-      snprintf(subDirPath, sizeof(subDirPath), "%s/%s", _dirName(), subDirName);
 
       // Create new iterator for subdir
-      _child = new SequentialIterator(sd, subDirPath);
-
+      _child = new SequentialIterator(sd, String(_path + "/" + subDirName));
       entry.close();
 
       // Immediately get next file from subdir
@@ -159,14 +153,14 @@ bool SequentialIterator::next(String &filename) {
   return false;
 }
 
+void Sd::resetIterator() {
+  _sequentialIterator.reset();
+  _sequentialIterator = std::make_unique<SequentialIterator>(sd, GIF_ROOT_PATH);
+}
+
 bool Sd::next(String &file_path) {
-  String filename;
-  bool success = _sequentialIterator->next(filename);
   file_path.clear();
-  file_path.concat(GIF_ROOT_PATH);
-  file_path.concat("/");
-  file_path.concat(filename);
-  return success;
+  return _sequentialIterator->next(file_path);
 }
 
 void IndexedIterator::next() {}
