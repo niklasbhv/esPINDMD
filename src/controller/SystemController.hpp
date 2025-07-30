@@ -18,11 +18,13 @@
 
 #include "application/Clock.hpp"
 #include "cli/Cli.hpp"
+#include "display/Logo.hpp"
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
 #include "storage/Sd.hpp"
-#include "display/Logo.hpp"
+
+#define SHOW_CLOCK_MS 5000
 
 class SystemController {
  private:

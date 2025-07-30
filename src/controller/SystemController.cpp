@@ -16,23 +16,26 @@
 
 #include "SystemController.hpp"
 
-#define SHOW_CLOCK_MS 5000
-
+/**
+ * Constructor of the SystemController class
+ */
 SystemController::SystemController(){};
 
+/**
+ * Function used for displaying the esPINDMD logo
+ */
 void SystemController::displayLogo() {
-    // Draw image to screen
-  int imgWidth = 128;
-  int imgHeight = 32;
-
-  for (int y = 0; y < imgHeight; y++) {
-    for (int x = 0; x < imgWidth; x++) {
-      uint16_t color = esPINDMD_logo[y * imgWidth + x];
+  for (int y = 0; y < PANEL_HEIGHT; y++) {
+    for (int x = 0; x < PANEL_WIDTH; x++) {
+      uint16_t color = esPINDMD_logo[y * PANEL_WIDTH + x];
       Matrix::drawPixel(x, y, color);
     }
   }
 }
 
+/**
+ * Function used to initialize the SystemController
+ */
 void SystemController::begin() {
   Serial.println("SystemController: Initializing the hardware components...");
   delay(5000);
@@ -63,6 +66,9 @@ void SystemController::begin() {
   delay(5000);
 }
 
+/**
+ * Function used for loading and displaying the given GIF file
+ */
 bool SystemController::displayGif(String& filename) {
   if (!_gif.open(filename.c_str(), Sd::openGifFile, Sd::closeGifFile,
                  Sd::readGifFile, Sd::seekGifFile, Matrix::drawGif)) {
@@ -77,6 +83,9 @@ bool SystemController::displayGif(String& filename) {
   return true;
 }
 
+/**
+ * Function used as the control loop for defining the device behavior
+ */
 void SystemController::loop() {
   Matrix::printClock(_clock->dateTime("H:i"));
   delay(SHOW_CLOCK_MS);
