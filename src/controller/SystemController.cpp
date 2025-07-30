@@ -20,6 +20,19 @@
 
 SystemController::SystemController(){};
 
+void SystemController::displayLogo() {
+    // Draw image to screen
+  int imgWidth = 128;
+  int imgHeight = 32;
+
+  for (int y = 0; y < imgHeight; y++) {
+    for (int x = 0; x < imgWidth; x++) {
+      uint16_t color = esPINDMD_logo[y * imgWidth + x];
+      Matrix::drawPixel(x, y, color);
+    }
+  }
+}
+
 void SystemController::begin() {
   Serial.println("SystemController: Initializing the hardware components...");
   delay(5000);
@@ -44,14 +57,16 @@ void SystemController::begin() {
   // setup the mqtt config
   // _mqtt = std::make_unique<Mqtt>(MQTT_SERVER, MQTT_SERVER_PORT);
   // setup the cli
-  _cli = std::make_unique<Cli>();
+  // _cli = std::make_unique<Cli>();
   Serial.println("SystemController: Initialized the software components!");
+  displayLogo();
+  delay(5000);
 }
 
 bool SystemController::displayGif(String& filename) {
   if (!_gif.open(filename.c_str(), Sd::openGifFile, Sd::closeGifFile,
                  Sd::readGifFile, Sd::seekGifFile, Matrix::drawGif)) {
-    Serial.println("SD: Failed to read GIF!");
+    Serial.println("SystemController: Failed to read GIF!");
     return false;
   } else {
     dma_display->clearScreen();
@@ -67,9 +82,10 @@ void SystemController::loop() {
   delay(SHOW_CLOCK_MS);
   String filename;
   if (!_sd->next(filename)) {
-    Serial.println("SystemController: Iterater exhausted, resetting the iterator!");
+    Serial.println(
+        "SystemController: Iterater exhausted, resetting the iterator!");
     _sd->resetIterator();
   } else {
-      displayGif(filename);
+    displayGif(filename);
   }
 }

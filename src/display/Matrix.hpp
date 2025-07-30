@@ -57,13 +57,13 @@ inline std::unique_ptr<MatrixPanel_I2S_DMA> dma_display;
 class Matrix {
  private:
   static void setCenteredCursorPosition(const String& text);
-  static void drawPixel(int16_t x, int16_t y, uint16_t colour);
 
  public:
   static void begin();
   static void println(const char* text, bool clear = true,
                       uint16_t cursor_x = 0, uint16_t cursor_y = 0);
   static void printClock(String time);
+  static void drawPixel(int16_t x, int16_t y, uint16_t colour);
   static void drawGif(GIFDRAW* pDraw);
 
   // Disallow creating an instance of this object

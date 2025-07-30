@@ -22,6 +22,7 @@
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
 #include "storage/Sd.hpp"
+#include "display/Logo.hpp"
 
 class SystemController {
  private:
@@ -34,6 +35,7 @@ class SystemController {
   std::unique_ptr<Cli> _cli;
   AnimatedGIF _gif;
 
+  void displayLogo();
   bool displayGif(String& filename);
 
  public:
