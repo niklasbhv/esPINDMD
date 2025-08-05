@@ -48,6 +48,10 @@ void Matrix::begin() {
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
+void Matrix::clearScreen() {
+  dma_display->clearScreen();
+}
+
 void Matrix::setCenteredCursorPosition(const String &text) {
   int16_t x, y;
   int16_t x1, y1;

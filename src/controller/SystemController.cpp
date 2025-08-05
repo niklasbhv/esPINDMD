@@ -75,7 +75,7 @@ bool SystemController::displayGif(String& filename) {
     Serial.println("SystemController: Failed to read GIF!");
     return false;
   } else {
-    dma_display->clearScreen();
+    Matrix::clearScreen();
     while (_gif.playFrame(true, NULL)) {
     }
     _gif.close();

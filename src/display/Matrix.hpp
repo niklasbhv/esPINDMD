@@ -60,6 +60,7 @@ class Matrix {
 
  public:
   static void begin();
+  static void clearScreen();
   static void println(const char* text, bool clear = true,
                       uint16_t cursor_x = 0, uint16_t cursor_y = 0);
   static void printClock(String time);
