@@ -27,7 +27,7 @@ Wifi::Wifi() {
   _wm.setConfigPortalTimeout(180);
   // create a Wi-Fi AP
   bool res;
-  res = _wm.autoConnect("esPINMDMD", "pinball");
+  res = _wm.autoConnect("esPINMDMD", "pinball12345");
   if (!res) {
     Serial.println("Wi-Fi: Failed to connect or hit timeout");
   } else {
