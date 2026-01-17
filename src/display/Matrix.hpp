@@ -22,7 +22,7 @@
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 
-#define PANEL_RES_X 64   // vertical number of pixels per display
+#define PANEL_RES_X 64   // horizontal number of pixels per display
 #define PANEL_RES_Y 32   // vertical number of pixels per display
 #define PANEL_COUNT_X 2  // number of displays on the x axis
 #define PANEL_COUNT_Y 1  // Number of displays on the y axis
@@ -31,6 +31,52 @@
 #define PANEL_HEIGHT PANEL_RES_Y* PANEL_COUNT_Y
 #define PANEL_CHAIN PANEL_COUNT_X + PANEL_COUNT_Y - 1
 
+#ifdef ARDUINO_ESP32_IOT_REDBOARD
+#define R1_PIN 4
+#define G1_PIN 13
+#define B1_PIN 14
+#define R2_PIN 16
+#define G2_PIN 17
+#define B2_PIN 25
+#define A_PIN 33
+#define B_PIN 32
+#define C_PIN 35
+#define D_PIN 34
+#define E_PIN -1
+#define LAT_PIN 5
+#define OE_PIN 27
+#define CLK_PIN 26
+#elif defined ARDUINO_METRO_ESP32S2
+#define R1_PIN
+#define G1_PIN
+#define B1_PIN
+#define R2_PIN
+#define G2_PIN
+#define B2_PIN
+#define A_PIN
+#define B_PIN
+#define C_PIN
+#define D_PIN
+#define E_PIN
+#define LAT_PIN
+#define OE_PIN
+#define CLK_PIN
+#elif defined ARDUINO_METRO_ESP32S3
+#define R1_PIN 2
+#define G1_PIN 3
+#define B1_PIN 4
+#define R2_PIN 5
+#define G2_PIN 6
+#define B2_PIN 7
+#define A_PIN 14
+#define B_PIN 15
+#define C_PIN 16
+#define D_PIN 17
+#define E_PIN -1
+#define LAT_PIN 10
+#define OE_PIN 9
+#define CLK_PIN 8
+#else
 #define R1_PIN 36
 #define G1_PIN 37
 #define B1_PIN 38
@@ -45,6 +91,7 @@
 #define LAT_PIN 18
 #define OE_PIN 16
 #define CLK_PIN 15
+#endif
 
 #define CLOCK_R 231
 #define CLOCK_G 103
