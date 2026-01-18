@@ -22,6 +22,7 @@
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
+#include "storage/Configuration.hpp"
 #include "storage/Sd.hpp"
 
 #define SHOW_CLOCK_MS 5000
@@ -32,6 +33,7 @@ class SystemController {
   std::unique_ptr<Sd> _sd;
   std::unique_ptr<Wifi> _wifi;
   // Software components
+  std::unique_ptr<Configuration> _config;
   std::unique_ptr<Clock> _clock;
   std::unique_ptr<Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
@@ -43,5 +45,6 @@ class SystemController {
  public:
   SystemController();
   void begin();
-  void loop();
+  void applicationLoop();
+  void systemLoop();
 };

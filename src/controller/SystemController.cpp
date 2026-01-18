@@ -45,6 +45,9 @@ void SystemController::begin() {
   // setup the SD Card configuration
   _sd = std::make_unique<Sd>();
   Matrix::println("SD Card Initialized");
+  Matrix::println("Loading Configuration...");
+  _config = std::make_unique<Configuration>();
+  Matrix::println("Configuration loaded!");
   // setup the Wi-Fi configuration
   _wifi = std::make_unique<Wifi>();
   Matrix::println("Wi-Fi Initialized");
@@ -57,10 +60,6 @@ void SystemController::begin() {
   _clock = std::make_unique<Clock>();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
-  // setup the mqtt config
-  // _mqtt = std::make_unique<Mqtt>(MQTT_SERVER, MQTT_SERVER_PORT);
-  // setup the cli
-  // _cli = std::make_unique<Cli>();
   Serial.println("SystemController: Initialized the software components!");
   displayLogo();
   delay(5000);
@@ -84,9 +83,9 @@ bool SystemController::displayGif(String& filename) {
 }
 
 /**
- * Function used as the control loop for defining the device behavior
+ * Function used for running the application parts of the device
  */
-void SystemController::loop() {
+void SystemController::applicationLoop() {
   Matrix::printClock(_clock->dateTime("H:i"));
   delay(SHOW_CLOCK_MS);
   String filename;
@@ -98,3 +97,7 @@ void SystemController::loop() {
     displayGif(filename);
   }
 }
+/**
+ * Function used for running the system parts of the device
+ */
+void SystemController::systemLoop() {}
