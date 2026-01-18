@@ -26,14 +26,32 @@
 #define MAX_FILENAME_LENGTH 64
 #define MAX_DIRNAME_LENGTH 64
 #define GIF_ROOT_PATH "/gif"
+#define INDEX_FILENAME ".index"
 
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_SPEED SD_SCK_MHZ(4)
 
-#define SD_MOSI 6
-#define SD_MISO 5
-#define SD_CLK 7
-#define SD_CS 4
+#ifdef ARDUINO_ESP32_IOT_REDBOARD
+#define SD_MOSI 23
+#define SD_MISO 19
+#define SD_CLK 18
+#define SD_CS 5
+#elif defined ARDUINO_METRO_ESP32S2
+#define SD_MOSI
+#define SD_MISO
+#define SD_CLK
+#define SD_CS
+#elif defined ARDUINO_METRO_ESP32S3
+#define SD_MOSI 42
+#define SD_MISO 21
+#define SD_CLK 39
+#define SD_CS 45
+#else
+#define SD_MOSI
+#define SD_MISO
+#define SD_CLK
+#define SD_CS
+#endif
 
 class SequentialIterator {
  private:
@@ -87,12 +105,16 @@ class Sd {
   std::unique_ptr<SequentialIterator> _sequentialIterator;
   std::unique_ptr<IndexedIterator> _indexedIterator;
 
+  bool isGifFile(const char *filename);
+  void indexGifFiles(SdFile dir, String pathPrefix = "");
+
  public:
   Sd();
   int generateFileIndex(const char *folderPath, const char *indexFilename);
   int loadFileIndex(const char *indexFilename);
-  bool openFile(String &filename, FsFile &file);
-  bool closeFile(FsFile &file);
+  static bool openFile(String &filename, FsFile &file);
+  static bool openFile(const char *filename, FsFile &file);
+  static bool closeFile(FsFile &file);
   void resetIterator();
   bool next(String &filename);
   // Static functions for use with the AnimatedGIF library

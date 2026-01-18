@@ -35,38 +35,62 @@ Sd::Sd() {
   Serial.println("SD: Initialized the sd component!");
 }
 
-/**
- * Pre-processing a index to enable randomized playback of gifs
- */
-int Sd::generateFileIndex(const char *folderPath, const char *indexFilename) {
-  FsFile dir, entry, indexFile;
+// Function to check if a filename ends with .gif
+bool Sd::isGifFile(const char *filename) {
+  const char *ext = strrchr(filename, '.');
+  return (ext && strcasecmp(ext, ".gif") == 0);
+}
 
-  if (!dir.open(folderPath)) {
-    Serial.println("Failed to open folder");
-    return -1;
-  }
-
-  if (!indexFile.open(indexFilename, O_WRITE | O_CREAT | O_TRUNC)) {
-    Serial.println("Failed to create index file");
-    return -1;
-  }
+// Recursive function to scan directories
+void Sd::indexGifFiles(SdFile dir, String pathPrefix) {  // = ""
+  SdFile entry;
 
   while (entry.openNext(&dir, O_RDONLY)) {
-    if (!entry.isDir()) {
-      char name[MAX_FILENAME_LENGTH];
-      entry.getName(name, sizeof(name));
-      String fname(name);
-      // fname.toLowerCase();
-      if (fname.endsWith(".gif")) {
-        indexFile.println(fname.c_str());
-        Serial.println("Indexed: " + fname);
+    if (entry.isDir()) {
+      char subDirName[64];
+      entry.getName(subDirName, sizeof(subDirName));
+
+      // Recurse into the subdirectory
+      // indexGifFiles(entry, pathPrefix + "/" + subDirName);
+    } else {
+      char fileName[64];
+      entry.getName(fileName, sizeof(fileName));
+      if (isGifFile(fileName)) {
+        String fullPath = pathPrefix + "/" + fileName;
+        // indexFile.println(fullPath);
       }
     }
     entry.close();
   }
+}
 
-  indexFile.close();
-  dir.close();
+/**
+ * Pre-processing a index to enable randomized playback of gifs
+ */
+int Sd::generateFileIndex(const char *folderPath, const char *indexFilename) {
+  if (!sd.begin()) {
+    Serial.println("SD init failed!");
+    return false;
+  }
+
+  SdFile root;
+  if (!root.open(GIF_ROOT_PATH)) {
+    Serial.println("Failed to open root folder!");
+    return false;
+  }
+
+  // if (!indexFile.open(INDEX_FILENAME, O_WRITE | O_CREAT | O_TRUNC)) {
+  //   Serial.println("Failed to create index file!");
+  //   return false;
+  // }
+
+  // indexGifFiles(root, "");  // Start recursive indexing
+  // indexFile.close();
+  Serial.println("GIF file index created successfully!");
+  return true;
+
+  // indexFile.close();
+  // dir.close();
 
   Serial.println("Indexing complete.");
   return 0;
@@ -100,6 +124,10 @@ bool Sd::openFile(String &filename, FsFile &file) {
   return file.open(filename.c_str(), O_READ);
 }
 
+bool Sd::openFile(const char *filename, FsFile &file) {
+  return file.open(filename, O_READ);
+}
+
 bool Sd::closeFile(FsFile &file) { return file.close(); }
 
 bool SequentialIterator::next(String &filename) {
@@ -126,7 +154,7 @@ bool SequentialIterator::next(String &filename) {
       filename = String(_path + "/" + String(filename_buffer, filename_size));
       entry.close();
       return true;
-    } 
+    }
     // Check if the entry is a directory
     else if (entry.isDir()) {
       char subDirName[MAX_DIRNAME_LENGTH];
