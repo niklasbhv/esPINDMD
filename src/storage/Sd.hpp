@@ -16,6 +16,8 @@
 
 #pragma once
 
+#define SPI_DRIVER_SELECT 2
+
 #include <AnimatedGIF.h>
 #include <SPI.h>
 #include <SdFat.h>
