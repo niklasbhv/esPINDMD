@@ -17,6 +17,7 @@
 #pragma once
 
 #define SPI_DRIVER_SELECT 2
+#define DISABLE_FS_H_WARNING
 
 #include <AnimatedGIF.h>
 #include <SPI.h>
