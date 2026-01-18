@@ -16,30 +16,38 @@
 
 #pragma once
 
-#include <Arduino.h>
+#include <ArduinoJson.h>
+#include "Sd.hpp"
 
-#include <variant>
-#include <vector>
+#define CONFIG_FILE_PATH "/config.json"
 
 /**
  * The configuration class is used for reading
- * and writing the configuration from the non
- * volatile storage of the esp32
+ * and writing the configuration from the SD-Card.
+ * 
+ * If no configuration is found, a new default one 
+ * is generated.
  */
 class Configuration {
- private:
-  ~Configuration();
-
  public:
+  // Configuration variables
+  // Common variables
+  char deviceName[32];
+
+  // clock variables
+  uint8_t clockColourR;
+  uint8_t clockColourG;
+  uint8_t clockColourB;
+
+  // Mqtt variables
+  bool mqttEnabled;
+  char mqttServer[32];
+  uint16_t mqttPort;
+  char mqttCredentialsUsername[32];
+  char mqttCredentialsPassword[32];
+
   Configuration();
-  int readInt(String key);
-  float readFloat(String key);
-  String readString(String key);
-  std::tuple<std::vector<uint8_t>, size_t> readBytes(String key);
-  bool writeInt(String key, std::variant<uint8_t, int16_t, uint16_t, int32_t,
-                                         uint32_t, int64_t, uint64_t>
-                                value);
-  bool writeFloat(String key, float value);
-  bool writeString(String key, String value);
-  bool writeBytes(String key, std::vector<uint8_t> value);
+  void load();
+  void loadDefault();
+  void save();
 };

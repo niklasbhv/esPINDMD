@@ -16,55 +16,39 @@
 
 #include "Configuration.hpp"
 
-#include <type_traits>
+Configuration::Configuration() {}
 
-#include "ArduinoNvs.h"
+void Configuration::load() {}
 
-Configuration::Configuration() { NVS.begin(); }
+void Configuration::loadDefault() {}
 
-Configuration::~Configuration() { NVS.close(); }
+void Configuration::save() {
+  FsFile configFile;
+  Sd::openFile(CONFIG_FILE_PATH, configFile);
+  JsonDocument doc;
 
-int Configuration::readInt(String key) { return NVS.getInt(key); }
+  // Device values
+  doc["device"]["name"] = deviceName;
 
-float Configuration::readFloat(String key) { return NVS.getFloat(key); }
+  // network values
+  doc["network"]["wifi"]["ssid"] = "";
+  doc["network"]["wifi"]["password"] = "";
 
-String Configuration::readString(String key) { return NVS.getString(key); }
+  // Clock values
+  doc["clock"]["colour"]["r"] = clockColourR;
+  doc["clock"]["colour"]["g"] = clockColourG;
+  doc["clock"]["colour"]["b"] = clockColourB;
+  doc["clock"][""] = "";
 
-std::tuple<std::vector<uint8_t>, size_t> Configuration::readBytes(String key) {
-  return make_tuple(NVS.getBlob(key), NVS.getBlobSize(key));
-}
+  // Mqtt values
+  doc["mqtt"]["enabled"] = mqttEnabled;
+  doc["mqtt"]["server"] = mqttServer;
+  doc["mqtt"]["port"] = mqttPort;
+  doc["mqtt"]["credentials"]["username"] = mqttCredentialsUsername;
+  doc["mqtt"]["credentials"]["password"] = mqttCredentialsPassword;
 
-bool Configuration::writeInt(String key,
-                             std::variant<uint8_t, int16_t, uint16_t, int32_t,
-                                          uint32_t, int64_t, uint64_t>
-                                 value) {
-  if (std::holds_alternative<uint8_t>(value)) {
-    return NVS.setInt(key, std::get<uint8_t>(value));
-  } else if (std::holds_alternative<int16_t>(value)) {
-    return NVS.setInt(key, std::get<int16_t>(value));
-  } else if (std::holds_alternative<uint16_t>(value)) {
-    return NVS.setInt(key, std::get<uint16_t>(value));
-  } else if (std::holds_alternative<int32_t>(value)) {
-    return NVS.setInt(key, std::get<int32_t>(value));
-  } else if (std::holds_alternative<uint32_t>(value)) {
-    return NVS.setInt(key, std::get<uint32_t>(value));
-  } else if (std::holds_alternative<int64_t>(value)) {
-    return NVS.setInt(key, std::get<int64_t>(value));
-  } else if (std::holds_alternative<uint64_t>(value)) {
-    return NVS.setInt(key, std::get<uint64_t>(value));
-  } else {
-    return false;
+  if (serializeJsonPretty(doc, file) == 0) {
+    Serial.println("Configuration: Failed to write configuration to SD");
   }
-}
-
-bool Configuration::writeFloat(String key, float value) {
-  return NVS.setFloat(key, value);
-}
-
-bool Configuration::writeString(String key, String value) {
-  return NVS.setString(key, value);
-}
-
-bool Configuration::writeBytes(String key, std::vector<uint8_t> value) {
-  return NVS.setBlob(key, value);
+  file.close();
 }
