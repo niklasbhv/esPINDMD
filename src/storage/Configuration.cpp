@@ -22,7 +22,8 @@ void Configuration::load() {}
 
 void Configuration::loadDefault() {
   // Device values
-  strlcpy(deviceName, "", sizeof(deviceName));
+  String deviceId = "esPINDMD-" + WiFi.macAddress();
+  strlcpy(deviceName, deviceId.c_str(), sizeof(deviceName));
 
   // Clock values
   clockColourR = 231;

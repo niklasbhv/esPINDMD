@@ -17,6 +17,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
+#include <WiFiManager.h>
 
 #include "Sd.hpp"
 
