@@ -17,6 +17,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
+
 #include "Sd.hpp"
 
 #define CONFIG_FILE_PATH "/config.json"
@@ -24,8 +25,8 @@
 /**
  * The configuration class is used for reading
  * and writing the configuration from the SD-Card.
- * 
- * If no configuration is found, a new default one 
+ *
+ * If no configuration is found, a new default one
  * is generated.
  */
 class Configuration {

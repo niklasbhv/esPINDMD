@@ -20,7 +20,25 @@ Configuration::Configuration() {}
 
 void Configuration::load() {}
 
-void Configuration::loadDefault() {}
+void Configuration::loadDefault() {
+  // Device values
+  strlcpy(deviceName, "", sizeof(deviceName));
+
+  // Clock values
+  clockColourR = 231;
+  clockColourG = 103;
+  clockColourB = 3;
+  strlcpy(clockNtpServer, "pool.ntp.org", sizeof(clockNtpServer));
+  strlcpy(clockNtpTimezone, "Europe/Berlin", sizeof(clockNtpTimezone));
+  clockNtpSyncTimeout = 60;
+
+  // Mqtt values
+  mqttEnabled = false;
+  strlcpy(mqttServer, "", sizeof(mqttServer));
+  mqttPort = 1883;
+  strlcpy(mqttCredentialsUsername, "", sizeof(mqttCredentialsUsername));
+  strlcpy(mqttCredentialsPassword, "", sizeof(mqttCredentialsPassword));
+}
 
 void Configuration::save() {
   FsFile configFile;
@@ -29,10 +47,6 @@ void Configuration::save() {
 
   // Device values
   doc["device"]["name"] = deviceName;
-
-  // network values
-  doc["network"]["wifi"]["ssid"] = "";
-  doc["network"]["wifi"]["password"] = "";
 
   // Clock values
   doc["clock"]["colour"]["r"] = clockColourR;
