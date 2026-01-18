@@ -47,20 +47,20 @@
 #define OE_PIN 27
 #define CLK_PIN 26
 #elif defined ARDUINO_METRO_ESP32S2
-#define R1_PIN
-#define G1_PIN
-#define B1_PIN
-#define R2_PIN
-#define G2_PIN
-#define B2_PIN
-#define A_PIN
-#define B_PIN
-#define C_PIN
-#define D_PIN
-#define E_PIN
-#define LAT_PIN
-#define OE_PIN
-#define CLK_PIN
+#define R1_PIN 7
+#define G1_PIN 8
+#define B1_PIN 9
+#define R2_PIN 10
+#define G2_PIN 11
+#define B2_PIN 12
+#define A_PIN 17
+#define B_PIN 18
+#define C_PIN 1
+#define D_PIN 2
+#define E_PIN -1
+#define LAT_PIN 15
+#define OE_PIN 14
+#define CLK_PIN 13
 #elif defined ARDUINO_METRO_ESP32S3
 #define R1_PIN 2
 #define G1_PIN 3
