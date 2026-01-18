@@ -19,15 +19,31 @@
 #include "controller/SystemController.hpp"
 
 // Global instance of the system controller
-SystemController contoller;
+SystemController controller;
+
+// Task handle
+TaskHandle_t systemTask;
+
+void sytemLoop(void *pvParameters) {
+  while (true) {
+    controller.systemLoop();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
 
 void setup() {
   // begin the serial console
   Serial.begin(115200);
   Serial.println("Setup: Initializing the system controller...");
   // initialize the SystemController
-  contoller.begin();
+  controller.begin();
   Serial.println("Setup: Initialized the system controller!");
+
+  // Create a seperate task for core system functionalities
+  // xTaskCreate(sytemLoop, "SystemLoop", 4096, NULL, 1, &systemTask);
 }
 
-void loop() { contoller.loop(); }
+void loop() {
+  controller.applicationLoop();
+  controller.systemLoop();
+}
