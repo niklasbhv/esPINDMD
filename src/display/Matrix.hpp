@@ -42,7 +42,7 @@
 #define B_PIN 32
 #define C_PIN 35
 #define D_PIN 34
-#define E_PIN -1
+#define E_PIN 3
 #define LAT_PIN 5
 #define OE_PIN 27
 #define CLK_PIN 26
@@ -57,7 +57,7 @@
 #define B_PIN 18
 #define C_PIN 1
 #define D_PIN 2
-#define E_PIN -1
+#define E_PIN 5
 #define LAT_PIN 15
 #define OE_PIN 14
 #define CLK_PIN 13
@@ -72,7 +72,7 @@
 #define B_PIN 15
 #define C_PIN 16
 #define D_PIN 17
-#define E_PIN -1
+#define E_PIN 0
 #define LAT_PIN 10
 #define OE_PIN 9
 #define CLK_PIN 8

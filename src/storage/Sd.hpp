@@ -37,20 +37,20 @@
 #define SD_CLK 18
 #define SD_CS 5
 #elif defined ARDUINO_METRO_ESP32S2
-#define SD_MOSI
-#define SD_MISO
-#define SD_CLK
-#define SD_CS
+#define SD_MOSI 35
+#define SD_MISO 37
+#define SD_CLK 36
+#define SD_CS 17
 #elif defined ARDUINO_METRO_ESP32S3
 #define SD_MOSI 42
 #define SD_MISO 21
 #define SD_CLK 39
 #define SD_CS 45
 #else
-#define SD_MOSI
-#define SD_MISO
-#define SD_CLK
-#define SD_CS
+#define SD_MOSI 19
+#define SD_MISO 23
+#define SD_CLK 18
+#define SD_CS 5
 #endif
 
 class SequentialIterator {
