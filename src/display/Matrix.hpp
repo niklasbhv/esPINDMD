@@ -53,10 +53,10 @@
 #define R2_PIN 10
 #define G2_PIN 11
 #define B2_PIN 12
-#define A_PIN 17
-#define B_PIN 18
-#define C_PIN 1
-#define D_PIN 2
+#define A_PIN 42
+#define B_PIN 21
+#define C_PIN 16
+#define D_PIN 6
 #define E_PIN 5
 #define LAT_PIN 15
 #define OE_PIN 14
