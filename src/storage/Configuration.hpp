@@ -38,6 +38,9 @@ class Configuration {
   uint8_t clockColourR;
   uint8_t clockColourG;
   uint8_t clockColourB;
+  char clockNtpServer[32];
+  char clockNtpTimezone[32];
+  uint8_t clockNtpSyncTimeout;
 
   // Mqtt variables
   bool mqttEnabled;

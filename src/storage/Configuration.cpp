@@ -38,7 +38,9 @@ void Configuration::save() {
   doc["clock"]["colour"]["r"] = clockColourR;
   doc["clock"]["colour"]["g"] = clockColourG;
   doc["clock"]["colour"]["b"] = clockColourB;
-  doc["clock"][""] = "";
+  doc["clock"]["ntp"]["server"] = clockNtpServer;
+  doc["clock"]["ntp"]["timezone"] = clockNtpTimezone;
+  doc["clock"]["ntp"]["sync_timeout"] = clockNtpSyncTimeout;
 
   // Mqtt values
   doc["mqtt"]["enabled"] = mqttEnabled;
@@ -47,8 +49,8 @@ void Configuration::save() {
   doc["mqtt"]["credentials"]["username"] = mqttCredentialsUsername;
   doc["mqtt"]["credentials"]["password"] = mqttCredentialsPassword;
 
-  if (serializeJsonPretty(doc, file) == 0) {
+  if (serializeJsonPretty(doc, configFile) == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");
   }
-  file.close();
+  configFile.close();
 }
