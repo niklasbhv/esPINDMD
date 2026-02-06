@@ -85,6 +85,15 @@ void Matrix::printClock(String time) {
   dma_display->println(time);
 }
 
+void Matrix::printDate(String date) {
+  dma_display->clearScreen();
+  dma_display->setFont(&FreeMonoBold18pt7b);
+  setCenteredCursorPosition(date);
+  dma_display->setTextColor(dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
+  dma_display->setTextSize(1);
+  dma_display->println(date);
+}
+
 void Matrix::drawGif(GIFDRAW *pDraw) {
   uint8_t *s;
   uint16_t *d, *usPalette, usTemp[320];

@@ -25,7 +25,7 @@
 #include "storage/Configuration.hpp"
 #include "storage/Sd.hpp"
 
-#define SHOW_CLOCK_MS 5000
+#define SHOW_APPLICATION_MS 5000
 
 class SystemController {
  private:

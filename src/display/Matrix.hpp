@@ -111,6 +111,7 @@ class Matrix {
   static void println(const char* text, bool clear = true,
                       uint16_t cursor_x = 0, uint16_t cursor_y = 0);
   static void printClock(String time);
+  static void printDate(String date);
   static void drawPixel(int16_t x, int16_t y, uint16_t colour);
   static void drawGif(GIFDRAW* pDraw);
 
