@@ -88,7 +88,7 @@ bool SystemController::displayGif(String& filename) {
 void SystemController::applicationLoop() {
   Matrix::printClock(_clock->dateTime("H:i"));
   delay(SHOW_APPLICATION_MS);
-  Matrix::printClock(_clock->dateTime("d.M.y"));
+  Matrix::printClock(_clock->dateTime("d.M.Y"));
   delay(SHOW_APPLICATION_MS);
   String filename;
   if (!_sd->next(filename)) {
