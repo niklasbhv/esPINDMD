@@ -16,8 +16,9 @@
 
 #pragma once
 
-#define SPI_DRIVER_SELECT 2
-#define DISABLE_FS_H_WARNING
+#ifndef DISABLE_FS_H_WARNING
+#define DISABLE_FS_H_WARNING  // Disable warning for type File not defined. 
+#endif  // DISABLE_FS_H_WARNING 
 
 #include <AnimatedGIF.h>
 #include <SPI.h>
@@ -32,7 +33,7 @@
 #define INDEX_FILENAME ".index"
 
 // defines the SPI clock speed, this is optimized for stability
-#define SPI_SPEED SD_SCK_MHZ(4)
+#define SPI_CLOCK SD_SCK_MHZ(4)
 
 #ifdef ARDUINO_ESP32_IOT_REDBOARD
 #define SD_MOSI 23

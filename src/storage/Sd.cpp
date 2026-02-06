@@ -16,8 +16,7 @@
 
 #include "Sd.hpp"
 
-SoftSpiDriver<SD_MISO, SD_MOSI, SD_CLK> softSpi;
-#define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi)
+#define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SPI_CLOCK)
 
 Sd::Sd() {
   Serial.println("SD: Initializing the sd component...");
@@ -30,6 +29,7 @@ Sd::Sd() {
   // try to initialize the sd card
   if (!sd.begin(SD_CONFIG)) {
     Serial.println("SD: Initialization of the sd component failed!");
+    sd.initErrorHalt();
   }
   _sequentialIterator = std::make_unique<SequentialIterator>(sd, GIF_ROOT_PATH);
   Serial.println("SD: Initialized the sd component!");
