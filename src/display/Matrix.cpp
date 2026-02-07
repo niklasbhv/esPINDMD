@@ -87,7 +87,7 @@ void Matrix::printClock(String time) {
 
 void Matrix::printDate(String date) {
   dma_display->clearScreen();
-  dma_display->setFont(&FreeMonoBold18pt7b);
+  dma_display->setFont(&FreeMonoBold9pt7b);
   setCenteredCursorPosition(date);
   dma_display->setTextColor(dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
   dma_display->setTextSize(1);

@@ -20,6 +20,7 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <SdFat.h>
 
+#include "Fonts/FreeMonoBold9pt7b.h"
 #include "Fonts/FreeMonoBold18pt7b.h"
 
 #define PANEL_RES_X 64   // horizontal number of pixels per display
