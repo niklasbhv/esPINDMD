@@ -18,7 +18,37 @@
 
 Configuration::Configuration() {}
 
-void Configuration::load() {}
+void Configuration::load() {
+  FsFile configFile;
+  Sd::openFile(CONFIG_FILE_PATH, configFile);
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, configFile);
+  Sd::closeFile(configFile);
+
+  if (err) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(err.c_str());
+    return;
+  }
+
+  // Device values
+  strlcpy(deviceName, doc["device"]["name"], sizeof(deviceName));
+
+  // Clock values
+  clockColourR = doc["clock"]["colour"]["r"];
+  clockColourG = doc["clock"]["colour"]["g"];
+  clockColourB = doc["clock"]["colour"]["b"];
+  strlcpy(clockNtpServer, doc["clock"]["ntp"]["server"], sizeof(clockNtpServer));
+  strlcpy(clockNtpTimezone, doc["clock"]["ntp"]["timezone"], sizeof(clockNtpTimezone));
+  clockNtpSyncTimeout = doc["clock"]["ntp"]["sync_timeout"];
+
+  // Mqtt values
+  mqttEnabled = doc["mqtt"]["enabled"];
+  strlcpy(mqttServer, doc["mqtt"]["server"], sizeof(mqttServer));
+  mqttPort = doc["mqtt"]["port"];
+  strlcpy(mqttCredentialsUsername, doc["mqtt"]["credentials"]["username"], sizeof(mqttCredentialsUsername));
+  strlcpy(mqttCredentialsPassword, doc["mqtt"]["credentials"]["password"], sizeof(mqttCredentialsPassword));
+}
 
 void Configuration::loadDefault() {
   // Device values
