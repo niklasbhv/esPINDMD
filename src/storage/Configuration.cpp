@@ -19,11 +19,11 @@
 Configuration::Configuration() {}
 
 void Configuration::load() {
-  FsFile configFile;
-  Sd::openFile(CONFIG_FILE_PATH, configFile);
+  FsFile config_file;
+  Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, configFile);
-  Sd::closeFile(configFile);
+  DeserializationError err = deserializeJson(doc, config_file);
+  Sd::closeFile(config_file);
 
   if (err) {
     Serial.print("deserializeJson() failed: ");
@@ -38,26 +38,21 @@ void Configuration::load() {
   application::clock::colour_r = doc["application"]["clock"]["colour"]["r"];
   application::clock::colour_g = doc["application"]["clock"]["colour"]["g"];
   application::clock::colour_b = doc["application"]["clock"]["colour"]["b"];
-  strlcpy(application::clock::ntp_server,
-          doc["application"]["clock"]["ntp"]["server"],
-          sizeof(application::clock::ntp_server));
-  strlcpy(application::clock::ntp_timezone,
-          doc["application"]["clock"]["ntp"]["timezone"],
-          sizeof(application::clock::ntp_timezone));
+  application::clock::ntp_server =
+      doc["application"]["clock"]["ntp"]["server"].as<std::string>();
+  application::clock::ntp_timezone =
+      doc["application"]["clock"]["ntp"]["timezone"].as<std::string>();
   application::clock::ntp_sync_timeout =
       doc["application"]["clock"]["ntp"]["sync"]["timeout"];
 
   // Mqtt values
   network::mqtt::enable = doc["network"]["mqtt"]["enable"];
-  strlcpy(network::mqtt::server, doc["network"]["mqtt"]["server"],
-          sizeof(network::mqtt::server));
+  network::mqtt::server = doc["network"]["mqtt"]["server"].as<std::string>();
   network::mqtt::port = doc["network"]["mqtt"]["port"];
-  strlcpy(network::mqtt::username,
-          doc["network"]["mqtt"]["credentials"]["username"],
-          sizeof(network::mqtt::username));
-  strlcpy(network::mqtt::password,
-          doc["network"]["mqtt"]["credentials"]["password"],
-          sizeof(network::mqtt::password));
+  network::mqtt::username =
+      doc["network"]["mqtt"]["credentials"]["username"].as<std::string>();
+  network::mqtt::password =
+      doc["network"]["mqtt"]["credentials"]["password"].as<std::string>();
 }
 
 void Configuration::loadDefault() {
@@ -67,8 +62,8 @@ void Configuration::loadDefault() {
 }
 
 void Configuration::save() {
-  FsFile configFile;
-  Sd::openFile(CONFIG_FILE_PATH, configFile);
+  FsFile config_file;
+  Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
 
   // Device values
@@ -109,8 +104,8 @@ void Configuration::save() {
   doc["network"]["wifi"]["ssid"] = network::wifi::ssid;
   doc["network"]["wifi"]["password"] = network::wifi::password;
 
-  if (serializeJsonPretty(doc, configFile) == 0) {
+  if (serializeJsonPretty(doc, config_file) == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");
   }
-  configFile.close();
+  config_file.close();
 }

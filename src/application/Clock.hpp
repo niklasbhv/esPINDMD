@@ -24,8 +24,8 @@ namespace application::clock {
 inline uint8_t colour_r = 231;
 inline uint8_t colour_g = 103;
 inline uint8_t colour_b = 3;
-inline char ntp_server[32] = "pool.ntp.org";
-inline char ntp_timezone[32] = "Europe/Berlin";
+inline std::string ntp_server = "pool.ntp.org";
+inline std::string ntp_timezone = "Europe/Berlin";
 inline uint8_t ntp_sync_timeout = 60;
 
 class Clock {

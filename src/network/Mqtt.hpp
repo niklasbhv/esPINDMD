@@ -22,11 +22,11 @@
 namespace network::mqtt {
 
 inline boolean enable = true;
-inline char server[32] = "mqtt.example.org";
+inline std::string server = "mqtt.example.org";
 inline uint16_t port = 1883;
-inline char username[32] = "";
-inline char password[32] = "";
-inline char client_id[32] = "";
+inline std::string username = "";
+inline std::string password = "";
+inline std::string client_id = "";
 
 class Mqtt {
  private:

@@ -20,11 +20,11 @@ namespace application::clock {
 
 Clock::Clock() {
   Serial.println("Clock: Initializing the clock component...");
-  ezt::setServer(ntp_server);
+  ezt::setServer(ntp_server.c_str());
   Serial.println("Clock: Syncing with NTP server: " + String(NTP_SERVER));
   ezt::setInterval(ntp_sync_timeout);
   ezt::waitForSync();
-  timezone.setLocation(ntp_timezone);
+  timezone.setLocation(ntp_timezone.c_str());
   Serial.println("Clock: Initialized the clock component!");
 }
 
