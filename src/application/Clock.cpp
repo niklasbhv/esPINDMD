@@ -16,17 +16,15 @@
 
 #include "Clock.hpp"
 
-#define NTP_SERVER "pool.ntp.org"
-#define TIMEZONE "Europe/Berlin"
-#define SYNC_TIMEOUT_S 60
+namespace application::clock {
 
 Clock::Clock() {
   Serial.println("Clock: Initializing the clock component...");
-  ezt::setServer(NTP_SERVER);
+  ezt::setServer(ntp_server);
   Serial.println("Clock: Syncing with NTP server: " + String(NTP_SERVER));
-  ezt::setInterval(SYNC_TIMEOUT_S);
+  ezt::setInterval(ntp_sync_timeout);
   ezt::waitForSync();
-  timezone.setLocation(TIMEZONE);
+  timezone.setLocation(ntp_timezone);
   Serial.println("Clock: Initialized the clock component!");
 }
 
@@ -34,3 +32,5 @@ String Clock::dateTime(String format) {
   ezt::events();
   return timezone.dateTime(format);
 }
+
+}  // namespace application::clock

@@ -19,6 +19,15 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 
+namespace network::mqtt {
+
+inline boolean enable = true;
+inline char server[32] = "mqtt.example.org";
+inline uint16_t port = 1883;
+inline char username[32] = "";
+inline char password[32] = "";
+inline char client_id[32] = "";
+
 class Mqtt {
  private:
   String _clientId;
@@ -32,3 +41,5 @@ class Mqtt {
   int reconnect();
   boolean connected();
 };
+
+}  // namespace network::mqtt

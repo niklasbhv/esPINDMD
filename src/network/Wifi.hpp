@@ -18,6 +18,11 @@
 
 #include <WiFiManager.h>
 
+namespace network::wifi {
+
+inline std::string ssid = "";
+inline std::string password = "";
+
 class Wifi {
  private:
   WiFiManager _wm;
@@ -26,3 +31,5 @@ class Wifi {
   Wifi();
   void reset();
 };
+
+}  // namespace network::wifi

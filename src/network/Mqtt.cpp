@@ -16,6 +16,8 @@
 
 #include "Mqtt.hpp"
 
+namespace network::mqtt {
+
 Mqtt::Mqtt(const char* mqtt_server, uint16_t mqtt_port) {
   PubSubClient _mqttClient(_wifiClient);
   _mqttClient.setServer(mqtt_server, mqtt_port);
@@ -41,3 +43,5 @@ int Mqtt::reconnect() {
 }
 
 boolean Mqtt::connected() { return _mqttClient.connected(); }
+
+}  // namespace network::mqtt

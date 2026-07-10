@@ -19,6 +19,15 @@
 #include <Arduino.h>
 #include <ezTime.h>
 
+namespace application::clock {
+
+inline uint8_t colour_r = 231;
+inline uint8_t colour_g = 103;
+inline uint8_t colour_b = 3;
+inline char ntp_server[32] = "pool.ntp.org";
+inline char ntp_timezone[32] = "Europe/Berlin";
+inline uint8_t ntp_sync_timeout = 60;
+
 class Clock {
  private:
   Timezone timezone;
@@ -27,3 +36,5 @@ class Clock {
   Clock();
   String dateTime(String format);
 };
+
+}  // namespace application::clock

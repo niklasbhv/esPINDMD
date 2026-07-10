@@ -20,8 +20,15 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <SdFat.h>
 
-#include "Fonts/FreeMonoBold9pt7b.h"
 #include "Fonts/FreeMonoBold18pt7b.h"
+#include "Fonts/FreeMonoBold9pt7b.h"
+
+namespace display::matrix {
+
+inline uint8_t panel_res_x = 64;
+inline uint8_t panel_res_y = 32;
+inline uint8_t panel_count_x = 2;
+inline uint8_t panel_count_y = 1;
 
 #define PANEL_RES_X 64   // horizontal number of pixels per display
 #define PANEL_RES_Y 32   // vertical number of pixels per display
@@ -119,3 +126,5 @@ class Matrix {
   // Disallow creating an instance of this object
   Matrix() = delete;
 };
+
+}  // namespace display::matrix

@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include "application/Clock.hpp"
+// #include "application/Clock.hpp"
 #include "cli/Cli.hpp"
 #include "display/Logo.hpp"
-#include "display/Matrix.hpp"
-#include "network/Mqtt.hpp"
-#include "network/Wifi.hpp"
+// #include "display/Matrix.hpp"
+// #include "network/Mqtt.hpp"
+// #include "network/Wifi.hpp"
 #include "storage/Configuration.hpp"
 #include "storage/Sd.hpp"
 
@@ -31,11 +31,11 @@ class SystemController {
  private:
   // Hardware components
   std::unique_ptr<Sd> _sd;
-  std::unique_ptr<Wifi> _wifi;
+  std::unique_ptr<network::wifi::Wifi> _wifi;
   // Software components
   std::unique_ptr<Configuration> _config;
-  std::unique_ptr<Clock> _clock;
-  std::unique_ptr<Mqtt> _mqtt;
+  std::unique_ptr<application::clock::Clock> _clock;
+  std::unique_ptr<network::mqtt::Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
   AnimatedGIF _gif;
 

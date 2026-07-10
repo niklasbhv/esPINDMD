@@ -19,7 +19,7 @@
 /**
  * Constructor of the SystemController class
  */
-SystemController::SystemController(){};
+SystemController::SystemController() {};
 
 /**
  * Function used for displaying the esPINDMD logo
@@ -28,7 +28,7 @@ void SystemController::displayLogo() {
   for (int y = 0; y < PANEL_HEIGHT; y++) {
     for (int x = 0; x < PANEL_WIDTH; x++) {
       uint16_t color = esPINDMD_logo[y * PANEL_WIDTH + x];
-      Matrix::drawPixel(x, y, color);
+      display::matrix::Matrix::drawPixel(x, y, color);
     }
   }
 }
@@ -40,24 +40,24 @@ void SystemController::begin() {
   Serial.println("SystemController: Initializing the hardware components...");
   delay(5000);
   // setup the matrix configuration
-  Matrix::begin();
-  Matrix::println("Matrix Initialized");
+  display::matrix::Matrix::begin();
+  display::matrix::Matrix::println("Matrix Initialized");
   // setup the SD Card configuration
   _sd = std::make_unique<Sd>();
-  Matrix::println("SD Card Initialized");
-  Matrix::println("Loading Configuration...");
+  display::matrix::Matrix::println("SD Card Initialized");
+  display::matrix::Matrix::println("Loading Configuration...");
   _config = std::make_unique<Configuration>();
-  Matrix::println("Configuration loaded!");
+  display::matrix::Matrix::println("Configuration loaded!");
   // setup the Wi-Fi configuration
-  _wifi = std::make_unique<Wifi>();
-  Matrix::println("Wi-Fi Initialized");
+  _wifi = std::make_unique<network::wifi::Wifi>();
+  display::matrix::Matrix::println("Wi-Fi Initialized");
   if (WiFi.status() == WL_CONNECTED) {
-    Matrix::println(WiFi.localIP().toString().c_str());
+    display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
   // setup the clock
-  _clock = std::make_unique<Clock>();
+  _clock = std::make_unique<application::clock::Clock>();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   Serial.println("SystemController: Initialized the software components!");
@@ -70,11 +70,12 @@ void SystemController::begin() {
  */
 bool SystemController::displayGif(String& filename) {
   if (!_gif.open(filename.c_str(), Sd::openGifFile, Sd::closeGifFile,
-                 Sd::readGifFile, Sd::seekGifFile, Matrix::drawGif)) {
+                 Sd::readGifFile, Sd::seekGifFile,
+                 display::matrix::Matrix::drawGif)) {
     Serial.println("SystemController: Failed to read GIF!");
     return false;
   } else {
-    Matrix::clearScreen();
+    display::matrix::Matrix::clearScreen();
     while (_gif.playFrame(true, NULL)) {
     }
     _gif.close();
@@ -86,9 +87,9 @@ bool SystemController::displayGif(String& filename) {
  * Function used for running the application parts of the device
  */
 void SystemController::applicationLoop() {
-  Matrix::printClock(_clock->dateTime("H:i"));
+  display::matrix::Matrix::printClock(_clock->dateTime("H:i"));
   delay(SHOW_APPLICATION_MS);
-  Matrix::printDate(_clock->dateTime("d.M.Y"));
+  display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
   delay(SHOW_APPLICATION_MS);
   String filename;
   if (!_sd->next(filename)) {

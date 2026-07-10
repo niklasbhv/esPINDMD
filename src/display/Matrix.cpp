@@ -16,6 +16,8 @@
 
 #include "Matrix.hpp"
 
+namespace display::matrix {
+
 void Matrix::begin() {
   Serial.println("Matrix: Initizalizing the matrix component...");
   // module configuration
@@ -168,3 +170,5 @@ void Matrix::drawGif(GIFDRAW *pDraw) {
     }
   }
 }
+
+}  // namespace display::matrix

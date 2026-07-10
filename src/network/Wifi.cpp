@@ -16,6 +16,8 @@
 
 #include "Wifi.hpp"
 
+namespace network::wifi {
+
 Wifi::Wifi() {
   Serial.println("Wi-Fi: Initializing the Wi-Fi component...");
   // set the Wi-Fi mode
@@ -27,7 +29,7 @@ Wifi::Wifi() {
   _wm.setConfigPortalTimeout(180);
   // create a Wi-Fi AP
   bool res;
-  res = _wm.autoConnect("esPINMDMD", "pinball12345");
+  res = _wm.autoConnect("esPINDMD", "pinball12345");
   if (!res) {
     Serial.println("Wi-Fi: Failed to connect or hit timeout");
   } else {
@@ -36,3 +38,5 @@ Wifi::Wifi() {
   Serial.println("Wi-Fi: Initialized the Wi-Fi component!");
 }
 void Wifi::reset() { _wm.resetSettings(); }
+
+}  // namespace network::wifi
