@@ -43,7 +43,7 @@ void SystemController::begin() {
   display::matrix::Matrix::begin();
   display::matrix::Matrix::println("Matrix Initialized");
   // setup the SD Card configuration
-  _sd = std::make_unique<Sd>();
+  _sd = std::make_unique<storage::sd::Sd>();
   display::matrix::Matrix::println("SD Card Initialized");
   display::matrix::Matrix::println("Loading Configuration...");
   _config = std::make_unique<Configuration>();
@@ -69,8 +69,8 @@ void SystemController::begin() {
  * Function used for loading and displaying the given GIF file
  */
 bool SystemController::displayGif(String& filename) {
-  if (!_gif.open(filename.c_str(), Sd::openGifFile, Sd::closeGifFile,
-                 Sd::readGifFile, Sd::seekGifFile,
+  if (!_gif.open(filename.c_str(), storage::sd::Sd::openGifFile, storage::sd::Sd::closeGifFile,
+                 storage::sd::Sd::readGifFile, storage::sd::Sd::seekGifFile,
                  display::matrix::Matrix::drawGif)) {
     Serial.println("SystemController: Failed to read GIF!");
     return false;

@@ -16,6 +16,8 @@
 
 #include "Sd.hpp"
 
+namespace storage::sd {
+
 #define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SPI_CLOCK)
 
 Sd::Sd() {
@@ -226,3 +228,5 @@ int32_t Sd::seekGifFile(GIFFILE *pFile, int32_t iPosition) {
   pFile->iPos = (int32_t)file->position();
   return pFile->iPos;
 }
+
+} // namespace storage::sd

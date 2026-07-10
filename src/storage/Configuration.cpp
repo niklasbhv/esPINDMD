@@ -20,10 +20,10 @@ Configuration::Configuration() {}
 
 void Configuration::load() {
   FsFile config_file;
-  Sd::openFile(CONFIG_FILE_PATH, config_file);
+  storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, config_file);
-  Sd::closeFile(config_file);
+  storage::sd::Sd::closeFile(config_file);
 
   if (err) {
     Serial.print("deserializeJson() failed: ");
@@ -63,7 +63,7 @@ void Configuration::loadDefault() {
 
 void Configuration::save() {
   FsFile config_file;
-  Sd::openFile(CONFIG_FILE_PATH, config_file);
+  storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
 
   // Device values

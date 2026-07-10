@@ -30,7 +30,7 @@
 class SystemController {
  private:
   // Hardware components
-  std::unique_ptr<Sd> _sd;
+  std::unique_ptr<storage::sd::Sd> _sd;
   std::unique_ptr<network::wifi::Wifi> _wifi;
   // Software components
   std::unique_ptr<Configuration> _config;

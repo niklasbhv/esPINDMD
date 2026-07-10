@@ -17,14 +17,16 @@
 #pragma once
 
 #ifndef DISABLE_FS_H_WARNING
-#define DISABLE_FS_H_WARNING  // Disable warning for type File not defined. 
-#endif  // DISABLE_FS_H_WARNING 
+#define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
+#endif                        // DISABLE_FS_H_WARNING
 
 #include <AnimatedGIF.h>
 #include <SPI.h>
 #include <SdFat.h>
 
 #include <memory>
+
+namespace storage::sd {
 
 #define MAX_GIF_FILES 100
 #define MAX_FILENAME_LENGTH 64
@@ -127,3 +129,5 @@ class Sd {
   static int32_t readGifFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
   static int32_t seekGifFile(GIFFILE *pFile, int32_t iPosition);
 };
+
+} // namespace storage::sd
