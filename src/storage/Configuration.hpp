@@ -20,6 +20,10 @@
 #include <WiFiManager.h>
 
 #include "Sd.hpp"
+#include "application/Clock.hpp"
+#include "display/Matrix.hpp"
+#include "network/Mqtt.hpp"
+#include "network/Wifi.hpp"
 
 #define CONFIG_FILE_PATH "/config.json"
 
@@ -35,21 +39,6 @@ class Configuration {
   // Configuration variables
   // Common variables
   char deviceName[32];
-
-  // clock variables
-  uint8_t clockColourR;
-  uint8_t clockColourG;
-  uint8_t clockColourB;
-  char clockNtpServer[32];
-  char clockNtpTimezone[32];
-  uint8_t clockNtpSyncTimeout;
-
-  // Mqtt variables
-  bool mqttEnabled;
-  char mqttServer[32];
-  uint16_t mqttPort;
-  char mqttCredentialsUsername[32];
-  char mqttCredentialsPassword[32];
 
   Configuration();
   void load();

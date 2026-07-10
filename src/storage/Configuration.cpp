@@ -35,40 +35,35 @@ void Configuration::load() {
   strlcpy(deviceName, doc["device"]["name"], sizeof(deviceName));
 
   // Clock values
-  clockColourR = doc["clock"]["colour"]["r"];
-  clockColourG = doc["clock"]["colour"]["g"];
-  clockColourB = doc["clock"]["colour"]["b"];
-  strlcpy(clockNtpServer, doc["clock"]["ntp"]["server"], sizeof(clockNtpServer));
-  strlcpy(clockNtpTimezone, doc["clock"]["ntp"]["timezone"], sizeof(clockNtpTimezone));
-  clockNtpSyncTimeout = doc["clock"]["ntp"]["sync_timeout"];
+  application::clock::colour_r = doc["application"]["clock"]["colour"]["r"];
+  application::clock::colour_g = doc["application"]["clock"]["colour"]["g"];
+  application::clock::colour_b = doc["application"]["clock"]["colour"]["b"];
+  strlcpy(application::clock::ntp_server,
+          doc["application"]["clock"]["ntp"]["server"],
+          sizeof(application::clock::ntp_server));
+  strlcpy(application::clock::ntp_timezone,
+          doc["application"]["clock"]["ntp"]["timezone"],
+          sizeof(application::clock::ntp_timezone));
+  application::clock::ntp_sync_timeout =
+      doc["application"]["clock"]["ntp"]["sync"]["timeout"];
 
   // Mqtt values
-  mqttEnabled = doc["mqtt"]["enabled"];
-  strlcpy(mqttServer, doc["mqtt"]["server"], sizeof(mqttServer));
-  mqttPort = doc["mqtt"]["port"];
-  strlcpy(mqttCredentialsUsername, doc["mqtt"]["credentials"]["username"], sizeof(mqttCredentialsUsername));
-  strlcpy(mqttCredentialsPassword, doc["mqtt"]["credentials"]["password"], sizeof(mqttCredentialsPassword));
+  network::mqtt::enable = doc["network"]["mqtt"]["enable"];
+  strlcpy(network::mqtt::server, doc["network"]["mqtt"]["server"],
+          sizeof(network::mqtt::server));
+  network::mqtt::port = doc["network"]["mqtt"]["port"];
+  strlcpy(network::mqtt::username,
+          doc["network"]["mqtt"]["credentials"]["username"],
+          sizeof(network::mqtt::username));
+  strlcpy(network::mqtt::password,
+          doc["network"]["mqtt"]["credentials"]["password"],
+          sizeof(network::mqtt::password));
 }
 
 void Configuration::loadDefault() {
   // Device values
   String deviceId = "esPINDMD-" + WiFi.macAddress();
   strlcpy(deviceName, deviceId.c_str(), sizeof(deviceName));
-
-  // Clock values
-  clockColourR = 231;
-  clockColourG = 103;
-  clockColourB = 3;
-  strlcpy(clockNtpServer, "pool.ntp.org", sizeof(clockNtpServer));
-  strlcpy(clockNtpTimezone, "Europe/Berlin", sizeof(clockNtpTimezone));
-  clockNtpSyncTimeout = 60;
-
-  // Mqtt values
-  mqttEnabled = false;
-  strlcpy(mqttServer, "", sizeof(mqttServer));
-  mqttPort = 1883;
-  strlcpy(mqttCredentialsUsername, "", sizeof(mqttCredentialsUsername));
-  strlcpy(mqttCredentialsPassword, "", sizeof(mqttCredentialsPassword));
 }
 
 void Configuration::save() {
@@ -79,20 +74,40 @@ void Configuration::save() {
   // Device values
   doc["device"]["name"] = deviceName;
 
-  // Clock values
-  doc["clock"]["colour"]["r"] = clockColourR;
-  doc["clock"]["colour"]["g"] = clockColourG;
-  doc["clock"]["colour"]["b"] = clockColourB;
-  doc["clock"]["ntp"]["server"] = clockNtpServer;
-  doc["clock"]["ntp"]["timezone"] = clockNtpTimezone;
-  doc["clock"]["ntp"]["sync_timeout"] = clockNtpSyncTimeout;
+  // Application configuration
+  // Clock configuration
+  doc["application"]["clock"]["colour"]["r"] = application::clock::colour_r;
+  doc["application"]["clock"]["colour"]["g"] = application::clock::colour_r;
+  doc["application"]["clock"]["colour"]["b"] = application::clock::colour_r;
+  doc["application"]["clock"]["ntp"]["server"] = application::clock::ntp_server;
+  doc["application"]["clock"]["ntp"]["timezone"] =
+      application::clock::ntp_timezone;
+  doc["application"]["clock"]["ntp"]["sync"]["timeout"] =
+      application::clock::ntp_sync_timeout;
 
-  // Mqtt values
-  doc["mqtt"]["enabled"] = mqttEnabled;
-  doc["mqtt"]["server"] = mqttServer;
-  doc["mqtt"]["port"] = mqttPort;
-  doc["mqtt"]["credentials"]["username"] = mqttCredentialsUsername;
-  doc["mqtt"]["credentials"]["password"] = mqttCredentialsPassword;
+  // Display configuration
+  // Matrix configuration
+  doc["display"]["matrix"]["panel"]["resolution"]["x"] =
+      display::matrix::panel_res_x;
+  doc["display"]["matrix"]["panel"]["resolution"]["y"] =
+      display::matrix::panel_res_y;
+  doc["display"]["matrix"]["panel"]["count"]["x"] =
+      display::matrix::panel_count_x;
+  doc["display"]["matrix"]["panel"]["count"]["y"] =
+      display::matrix::panel_count_y;
+
+  // Network configuration
+  // MQTT configuration
+  doc["network"]["mqtt"]["enable"] = network::mqtt::enable;
+  doc["network"]["mqtt"]["server"] = network::mqtt::server;
+  doc["network"]["mqtt"]["port"] = network::mqtt::port;
+  doc["network"]["mqtt"]["credentials"]["username"] = network::mqtt::username;
+  doc["network"]["mqtt"]["credentials"]["password"] = network::mqtt::password;
+  doc["network"]["mqtt"]["client"]["id"] = network::mqtt::client_id;
+
+  // Wi-Fi configuration
+  doc["network"]["wifi"]["ssid"] = network::wifi::ssid;
+  doc["network"]["wifi"]["password"] = network::wifi::password;
 
   if (serializeJsonPretty(doc, configFile) == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");
