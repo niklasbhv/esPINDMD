@@ -18,15 +18,15 @@
 
 namespace storage::sd {
 
-#define SD_CONFIG SdSpiConfig(SD_CS, DEDICATED_SPI, SPI_CLOCK)
+#define SD_CONFIG SdSpiConfig(pins_cs, DEDICATED_SPI, SPI_CLOCK)
 
 Sd::Sd() {
   Serial.println("SD: Initializing the sd component...");
   Serial.println("\nSD SPI pins:\n");
-  Serial.println("MISO: " + String(SD_MISO));
-  Serial.println("MOSI: " + String(SD_MOSI));
-  Serial.println("CLK:  " + String(SD_CLK));
-  Serial.println("CS:   " + String(SD_CS));
+  Serial.println("MISO: " + String(pins_miso));
+  Serial.println("MOSI: " + String(pins_mosi));
+  Serial.println("CLK:  " + String(pins_clk));
+  Serial.println("CS:   " + String(pins_cs));
 
   // try to initialize the sd card
   if (!sd.begin(SD_CONFIG)) {

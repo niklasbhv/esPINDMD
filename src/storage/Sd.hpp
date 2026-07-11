@@ -28,8 +28,8 @@
 
 namespace storage::sd {
 
-inline uint8_t pins_mosi = 19;
 inline uint8_t pins_miso = 23;
+inline uint8_t pins_mosi = 19;
 inline uint8_t pins_clk = 18;
 inline uint8_t pins_cs = 5;
 
@@ -41,28 +41,6 @@ inline uint8_t pins_cs = 5;
 
 // defines the SPI clock speed, this is optimized for stability
 #define SPI_CLOCK SD_SCK_MHZ(4)
-
-#ifdef ARDUINO_ESP32_IOT_REDBOARD
-#define SD_MOSI 23
-#define SD_MISO 19
-#define SD_CLK 18
-#define SD_CS 5
-#elif defined ARDUINO_METRO_ESP32S2
-#define SD_MOSI 35
-#define SD_MISO 37
-#define SD_CLK 36
-#define SD_CS 17
-#elif defined ARDUINO_METRO_ESP32S3
-#define SD_MOSI 42
-#define SD_MISO 21
-#define SD_CLK 39
-#define SD_CS 45
-#else
-#define SD_MOSI 19
-#define SD_MISO 23
-#define SD_CLK 18
-#define SD_CS 5
-#endif
 
 class SequentialIterator {
  private:
