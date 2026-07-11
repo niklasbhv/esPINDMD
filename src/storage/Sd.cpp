@@ -229,4 +229,4 @@ int32_t Sd::seekGifFile(GIFFILE *pFile, int32_t iPosition) {
   return pFile->iPos;
 }
 
-} // namespace storage::sd
+}  // namespace storage::sd

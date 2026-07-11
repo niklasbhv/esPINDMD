@@ -41,17 +41,22 @@ void Configuration::load() {
   get(doc["application"]["clock"]["colour"]["g"], application::clock::colour_g);
   get(doc["application"]["clock"]["colour"]["b"], application::clock::colour_b);
 
-  get(doc["application"]["clock"]["ntp"]["server"], application::clock::ntp_server);
-  get(doc["application"]["clock"]["ntp"]["timezone"], application::clock::ntp_timezone);
-  get(doc["application"]["clock"]["ntp"]["sync"]["timeout"], application::clock::ntp_sync_timeout);
+  get(doc["application"]["clock"]["ntp"]["server"],
+      application::clock::ntp_server);
+  get(doc["application"]["clock"]["ntp"]["timezone"],
+      application::clock::ntp_timezone);
+  get(doc["application"]["clock"]["ntp"]["sync"]["timeout"],
+      application::clock::ntp_sync_timeout);
 
   // Mqtt values
   get(doc["network"]["mqtt"]["enable"], network::mqtt::enable);
   get(doc["network"]["mqtt"]["server"], network::mqtt::server);
   get(doc["network"]["mqtt"]["port"], network::mqtt::port);
 
-  get(doc["network"]["mqtt"]["credentials"]["username"], network::mqtt::username);
-  get(doc["network"]["mqtt"]["credentials"]["password"], network::mqtt::password);
+  get(doc["network"]["mqtt"]["credentials"]["username"],
+      network::mqtt::username);
+  get(doc["network"]["mqtt"]["credentials"]["password"],
+      network::mqtt::password);
 
   // Storage configuration
   // SD configuration
@@ -123,4 +128,4 @@ void Configuration::save() {
   config_file.close();
 }
 
-} // namespace storage::configuration
+}  // namespace storage::configuration

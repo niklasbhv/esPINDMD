@@ -113,4 +113,4 @@ class Sd {
   static int32_t seekGifFile(GIFFILE *pFile, int32_t iPosition);
 };
 
-} // namespace storage::sd
+}  // namespace storage::sd

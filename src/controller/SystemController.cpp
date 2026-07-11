@@ -69,8 +69,9 @@ void SystemController::begin() {
  * Function used for loading and displaying the given GIF file
  */
 bool SystemController::displayGif(String& filename) {
-  if (!_gif.open(filename.c_str(), storage::sd::Sd::openGifFile, storage::sd::Sd::closeGifFile,
-                 storage::sd::Sd::readGifFile, storage::sd::Sd::seekGifFile,
+  if (!_gif.open(filename.c_str(), storage::sd::Sd::openGifFile,
+                 storage::sd::Sd::closeGifFile, storage::sd::Sd::readGifFile,
+                 storage::sd::Sd::seekGifFile,
                  display::matrix::Matrix::drawGif)) {
     Serial.println("SystemController: Failed to read GIF!");
     return false;
