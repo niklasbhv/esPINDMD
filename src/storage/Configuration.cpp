@@ -55,6 +55,13 @@ void Configuration::load() {
       doc["network"]["mqtt"]["credentials"]["username"].as<std::string>();
   network::mqtt::password =
       doc["network"]["mqtt"]["credentials"]["password"].as<std::string>();
+
+  // Storage configuration
+  // SD confiugration
+  storage::sd::pins_mosi = doc["storage"]["sd"]["pins"]["mosi"];
+  storage::sd::pins_miso = doc["storage"]["sd"]["pins"]["miso"];
+  storage::sd::pins_clk = doc["storage"]["sd"]["pins"]["clk"];
+  storage::sd::pins_cs = doc["storage"]["sd"]["pins"]["cs"];
 }
 
 void Configuration::loadDefault() {
@@ -105,6 +112,13 @@ void Configuration::save() {
   // Wi-Fi configuration
   doc["network"]["wifi"]["ssid"] = network::wifi::ssid;
   doc["network"]["wifi"]["password"] = network::wifi::password;
+
+  // Storage configuration
+  // SD confiugration
+  doc["storage"]["sd"]["pins"]["mosi"] = storage::sd::pins_mosi;
+  doc["storage"]["sd"]["pins"]["miso"] = storage::sd::pins_miso;
+  doc["storage"]["sd"]["pins"]["clk"] = storage::sd::pins_clk;
+  doc["storage"]["sd"]["pins"]["cs"] = storage::sd::pins_cs;
 
   if (serializeJsonPretty(doc, config_file) == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");

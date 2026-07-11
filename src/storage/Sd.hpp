@@ -28,6 +28,11 @@
 
 namespace storage::sd {
 
+inline uint8_t pins_mosi = 19;
+inline uint8_t pins_miso = 23;
+inline uint8_t pins_clk = 18;
+inline uint8_t pins_cs = 5;
+
 #define MAX_GIF_FILES 100
 #define MAX_FILENAME_LENGTH 64
 #define MAX_DIRNAME_LENGTH 64
