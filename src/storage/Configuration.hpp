@@ -30,6 +30,19 @@ namespace storage::configuration {
 #define CONFIG_FILE_PATH "/config.json"
 
 /**
+ * Helper function used to retrieve values of the correct type from a JSON
+ * We do not care, if the retreival fails as every value has a default
+ */
+template<typename V, typename T>
+void get(const V& value, T& out)
+{
+    JsonVariantConst v = value;
+    if (v.is<T>()) {
+        out = v.as<T>();
+    }
+}
+
+/**
  * The configuration class is used for reading
  * and writing the configuration from the SD-Card.
  *

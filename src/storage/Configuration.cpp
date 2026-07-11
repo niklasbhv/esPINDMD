@@ -37,31 +37,28 @@ void Configuration::load() {
   strlcpy(deviceName, doc["device"]["name"], sizeof(deviceName));
 
   // Clock values
-  application::clock::colour_r = doc["application"]["clock"]["colour"]["r"];
-  application::clock::colour_g = doc["application"]["clock"]["colour"]["g"];
-  application::clock::colour_b = doc["application"]["clock"]["colour"]["b"];
-  application::clock::ntp_server =
-      doc["application"]["clock"]["ntp"]["server"].as<std::string>();
-  application::clock::ntp_timezone =
-      doc["application"]["clock"]["ntp"]["timezone"].as<std::string>();
-  application::clock::ntp_sync_timeout =
-      doc["application"]["clock"]["ntp"]["sync"]["timeout"];
+  get(doc["application"]["clock"]["colour"]["r"], application::clock::colour_r);
+  get(doc["application"]["clock"]["colour"]["g"], application::clock::colour_g);
+  get(doc["application"]["clock"]["colour"]["b"], application::clock::colour_b);
+
+  get(doc["application"]["clock"]["ntp"]["server"], application::clock::ntp_server);
+  get(doc["application"]["clock"]["ntp"]["timezone"], application::clock::ntp_timezone);
+  get(doc["application"]["clock"]["ntp"]["sync"]["timeout"], application::clock::ntp_sync_timeout);
 
   // Mqtt values
-  network::mqtt::enable = doc["network"]["mqtt"]["enable"];
-  network::mqtt::server = doc["network"]["mqtt"]["server"].as<std::string>();
-  network::mqtt::port = doc["network"]["mqtt"]["port"];
-  network::mqtt::username =
-      doc["network"]["mqtt"]["credentials"]["username"].as<std::string>();
-  network::mqtt::password =
-      doc["network"]["mqtt"]["credentials"]["password"].as<std::string>();
+  get(doc["network"]["mqtt"]["enable"], network::mqtt::enable);
+  get(doc["network"]["mqtt"]["server"], network::mqtt::server);
+  get(doc["network"]["mqtt"]["port"], network::mqtt::port);
+
+  get(doc["network"]["mqtt"]["credentials"]["username"], network::mqtt::username);
+  get(doc["network"]["mqtt"]["credentials"]["password"], network::mqtt::password);
 
   // Storage configuration
-  // SD confiugration
-  storage::sd::pins_mosi = doc["storage"]["sd"]["pins"]["mosi"];
-  storage::sd::pins_miso = doc["storage"]["sd"]["pins"]["miso"];
-  storage::sd::pins_clk = doc["storage"]["sd"]["pins"]["clk"];
-  storage::sd::pins_cs = doc["storage"]["sd"]["pins"]["cs"];
+  // SD configuration
+  get(doc["storage"]["sd"]["pins"]["mosi"], storage::sd::pins_mosi);
+  get(doc["storage"]["sd"]["pins"]["miso"], storage::sd::pins_miso);
+  get(doc["storage"]["sd"]["pins"]["clk"], storage::sd::pins_clk);
+  get(doc["storage"]["sd"]["pins"]["cs"], storage::sd::pins_cs);
 }
 
 void Configuration::loadDefault() {
