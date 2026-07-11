@@ -46,7 +46,7 @@ void SystemController::begin() {
   _sd = std::make_unique<storage::sd::Sd>();
   display::matrix::Matrix::println("SD Card Initialized");
   display::matrix::Matrix::println("Loading Configuration...");
-  _config = std::make_unique<Configuration>();
+  _config = std::make_unique<storage::configuration::Configuration>();
   display::matrix::Matrix::println("Configuration loaded!");
   // setup the Wi-Fi configuration
   _wifi = std::make_unique<network::wifi::Wifi>();

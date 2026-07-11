@@ -33,7 +33,7 @@ class SystemController {
   std::unique_ptr<storage::sd::Sd> _sd;
   std::unique_ptr<network::wifi::Wifi> _wifi;
   // Software components
-  std::unique_ptr<Configuration> _config;
+  std::unique_ptr<storage::configuration::Configuration> _config;
   std::unique_ptr<application::clock::Clock> _clock;
   std::unique_ptr<network::mqtt::Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;

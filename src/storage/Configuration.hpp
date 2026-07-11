@@ -25,6 +25,8 @@
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
 
+namespace storage::configuration {
+
 #define CONFIG_FILE_PATH "/config.json"
 
 /**
@@ -45,3 +47,5 @@ class Configuration {
   void loadDefault();
   void save();
 };
+
+} // namespace storage::configuration

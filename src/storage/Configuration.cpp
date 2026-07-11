@@ -16,6 +16,8 @@
 
 #include "Configuration.hpp"
 
+namespace storage::configuration {
+
 Configuration::Configuration() {}
 
 void Configuration::load() {
@@ -109,3 +111,5 @@ void Configuration::save() {
   }
   config_file.close();
 }
+
+} // namespace storage::configuration
