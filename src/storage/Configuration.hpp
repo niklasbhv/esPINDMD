@@ -50,13 +50,8 @@ void get(const V& value, T& out) {
  */
 class Configuration {
  public:
-  // Configuration variables
-  // Common variables
-  char deviceName[32];
-
   Configuration();
   void load();
-  void loadDefault();
   void save();
 };
 

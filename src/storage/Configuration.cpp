@@ -33,9 +33,6 @@ void Configuration::load() {
     return;
   }
 
-  // Device values
-  strlcpy(deviceName, doc["device"]["name"], sizeof(deviceName));
-
   // Clock values
   get(doc["application"]["clock"]["colour"]["r"], application::clock::colour_r);
   get(doc["application"]["clock"]["colour"]["g"], application::clock::colour_g);
@@ -96,19 +93,10 @@ void Configuration::load() {
   get(doc["storage"]["sd"]["pins"]["cs"], storage::sd::pins_cs);
 }
 
-void Configuration::loadDefault() {
-  // Device values
-  String deviceId = "esPINDMD-" + WiFi.macAddress();
-  strlcpy(deviceName, deviceId.c_str(), sizeof(deviceName));
-}
-
 void Configuration::save() {
   FsFile config_file;
   storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
-
-  // Device values
-  doc["device"]["name"] = deviceName;
 
   // Application configuration
   // Clock configuration
