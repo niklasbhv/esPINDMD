@@ -18,7 +18,6 @@
 
 // #include "application/Clock.hpp"
 #include "cli/Cli.hpp"
-#include "display/Logo.hpp"
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"

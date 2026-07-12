@@ -22,18 +22,6 @@
 SystemController::SystemController() {};
 
 /**
- * Function used for displaying the esPINDMD logo
- */
-void SystemController::displayLogo() {
-  for (int y = 0; y < PANEL_HEIGHT; y++) {
-    for (int x = 0; x < PANEL_WIDTH; x++) {
-      uint16_t color = esPINDMD_logo[y * PANEL_WIDTH + x];
-      display::matrix::Matrix::drawPixel(x, y, color);
-    }
-  }
-}
-
-/**
  * Function used to initialize the SystemController
  */
 void SystemController::begin() {
@@ -61,7 +49,7 @@ void SystemController::begin() {
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   Serial.println("SystemController: Initialized the software components!");
-  displayLogo();
+  display::matrix::Matrix::printLogo();
   delay(5000);
 }
 

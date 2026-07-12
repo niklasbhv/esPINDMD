@@ -20,25 +20,30 @@ namespace display::matrix {
 
 void Matrix::begin() {
   Serial.println("Matrix: Initizalizing the matrix component...");
+
+  uint8_t panel_width = panel_res_x * panel_count_x;
+  uint8_t panel_height = panel_res_x * panel_count_y;
+  uint8_t panel_chain = panel_count_x + panel_count_y - 1;
+
   // module configuration
-  HUB75_I2S_CFG mxconfig(PANEL_RES_X,  // module width
-                         PANEL_RES_Y,  // module height
-                         PANEL_CHAIN   // chain length
+  HUB75_I2S_CFG mxconfig(panel_res_x,  // module width
+                         panel_res_y,  // module height
+                         panel_chain   // chain length
   );
-  mxconfig.gpio.r1 = R1_PIN;
-  mxconfig.gpio.g1 = G1_PIN;
-  mxconfig.gpio.b1 = B1_PIN;
-  mxconfig.gpio.r2 = R2_PIN;
-  mxconfig.gpio.g2 = G2_PIN;
-  mxconfig.gpio.b2 = B2_PIN;
-  mxconfig.gpio.a = A_PIN;
-  mxconfig.gpio.b = B_PIN;
-  mxconfig.gpio.c = C_PIN;
-  mxconfig.gpio.d = D_PIN;
+  mxconfig.gpio.r1 = pins_r1;
+  mxconfig.gpio.g1 = pins_g1;
+  mxconfig.gpio.b1 = pins_b1;
+  mxconfig.gpio.r2 = pins_r2;
+  mxconfig.gpio.g2 = pins_g2;
+  mxconfig.gpio.b2 = pins_b2;
+  mxconfig.gpio.a = pins_a;
+  mxconfig.gpio.b = pins_b;
+  mxconfig.gpio.c = pins_c;
+  mxconfig.gpio.d = pins_d;
   // mxconfig.gpio.e = E_PIN;
-  mxconfig.gpio.lat = LAT_PIN;
-  mxconfig.gpio.oe = OE_PIN;
-  mxconfig.gpio.clk = CLK_PIN;
+  mxconfig.gpio.lat = pins_lat;
+  mxconfig.gpio.oe = pins_oe;
+  mxconfig.gpio.clk = pins_clk;
   mxconfig.clkphase = false;
   // mxconfig.latch_blanking = 4;
   // mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_10M;
@@ -60,9 +65,18 @@ void Matrix::setCenteredCursorPosition(const String &text) {
   dma_display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
 
   // Center horizontally
-  x = (PANEL_WIDTH - w) / 2;
-  y = (PANEL_HEIGHT - h) / 2 - y1;
+  x = (panel_width - w) / 2;
+  y = (panel_height - h) / 2 - y1;
   dma_display->setCursor(x, y);
+}
+
+void Matrix::printLogo() {
+  for (int y = 0; y < panel_height; y++) {
+    for (int x = 0; x < panel_width; x++) {
+      uint16_t color = esPINDMD_logo[y * panel_width + x];
+      Matrix::drawPixel(x, y, color);
+    }
+  }
 }
 
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
@@ -102,7 +116,7 @@ void Matrix::drawGif(GIFDRAW *pDraw) {
   int x, y, iWidth;
 
   iWidth = pDraw->iWidth;
-  if (iWidth > PANEL_WIDTH) iWidth = PANEL_WIDTH;
+  if (iWidth > panel_width) iWidth = panel_width;
 
   usPalette = pDraw->pPalette;
   y = pDraw->iY + pDraw->y;  // current line
