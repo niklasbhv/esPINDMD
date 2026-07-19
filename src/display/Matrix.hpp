@@ -26,10 +26,10 @@
 
 namespace display::matrix {
 
-inline uint8_t panel_res_x = 64; // horizontal number of pixels per display
-inline uint8_t panel_res_y = 32; // vertical number of pixels per display
-inline uint8_t panel_count_x = 2; // number of displays on the x axis
-inline uint8_t panel_count_y = 1; // Number of displays on the y axis
+inline uint8_t panel_res_x = 64;   // horizontal number of pixels per display
+inline uint8_t panel_res_y = 32;   // vertical number of pixels per display
+inline uint8_t panel_count_x = 2;  // number of displays on the x axis
+inline uint8_t panel_count_y = 1;  // Number of displays on the y axis
 
 inline uint16_t panel_width = 0;
 inline uint16_t panel_height = 0;

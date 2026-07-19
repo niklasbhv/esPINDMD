@@ -25,34 +25,34 @@ SystemController::SystemController() {};
  * Function used to initialize the SystemController
  */
 void SystemController::begin() {
-    // setup the SD Card configuration
-  _sd = std::make_unique<storage::sd::Sd>();
-  //delay(1000);
+  // setup the SD Card configuration
+  sd = std::make_unique<storage::sd::Sd>();
+  // delay(1000);
   Serial.println("SystemController: Loading configuration...");
   if (storage::configuration::Configuration::load()) {
-      Serial.println("SystemController: Configuration loaded");
-  }
-  else {
-      Serial.println("SystemController: No configuration found! Loading defaults");
+    Serial.println("SystemController: Configuration loaded");
+  } else {
+    Serial.println(
+        "SystemController: No configuration found! Loading defaults");
   }
 
   Serial.println("SystemController: Initializing the hardware components...");
   delay(5000);
   // setup the matrix configuration
   display::matrix::Matrix::begin();
+  display::matrix::Matrix::printLogo();
   // setup the Wi-Fi configuration
-  _wifi = std::make_unique<network::wifi::Wifi>();
+  wifi = std::make_unique<network::wifi::Wifi>();
   if (WiFi.status() == WL_CONNECTED) {
-    display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
+    // display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
   // setup the clock
-  _clock = std::make_unique<application::clock::Clock>();
+  clock = std::make_unique<application::clock::Clock>();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   Serial.println("SystemController: Initialized the software components!");
-  display::matrix::Matrix::printLogo();
   delay(5000);
 }
 

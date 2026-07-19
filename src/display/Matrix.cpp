@@ -26,9 +26,9 @@ void Matrix::begin() {
   panel_chain = panel_count_x + panel_count_y - 1;
 
   // module configuration
-  HUB75_I2S_CFG mxconfig(panel_res_x,   // module width
+  HUB75_I2S_CFG mxconfig(panel_res_x,  // module width
                          panel_res_y,  // module height
-                         panel_chain    // chain length
+                         panel_chain   // chain length
   );
   mxconfig.gpio.r1 = pins_r1;
   mxconfig.gpio.g1 = pins_g1;
