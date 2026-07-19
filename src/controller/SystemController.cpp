@@ -26,8 +26,7 @@ SystemController::SystemController() {};
  */
 void SystemController::begin() {
   // setup the SD Card configuration
-  sd = std::make_unique<storage::sd::Sd>();
-  // delay(1000);
+  _sd = std::make_unique<storage::sd::Sd>();
   Serial.println("SystemController: Loading configuration...");
   if (storage::configuration::Configuration::load()) {
     Serial.println("SystemController: Configuration loaded");
@@ -37,23 +36,29 @@ void SystemController::begin() {
   }
 
   Serial.println("SystemController: Initializing the hardware components...");
-  delay(5000);
+  delay(2000);
   // setup the matrix configuration
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
   // setup the Wi-Fi configuration
-  wifi = std::make_unique<network::wifi::Wifi>();
+  _wifi = std::make_unique<network::wifi::Wifi>();
   if (WiFi.status() == WL_CONNECTED) {
     // display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
+  // setup MQTT if enabled
+  if (network::mqtt::enable) {
+    _mqtt = std::make_unique<network::mqtt::Mqtt>();
+    _mqtt->connect();
+  }
+
   // setup the clock
-  clock = std::make_unique<application::clock::Clock>();
+  _clock = std::make_unique<application::clock::Clock>();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   Serial.println("SystemController: Initialized the software components!");
-  delay(5000);
+  delay(2000);
 }
 
 /**

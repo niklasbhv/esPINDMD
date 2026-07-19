@@ -18,9 +18,9 @@
 
 namespace network::mqtt {
 
-Mqtt::Mqtt(const char* mqtt_server, uint16_t mqtt_port) {
+Mqtt::Mqtt() {
   PubSubClient _mqttClient(_wifiClient);
-  _mqttClient.setServer(mqtt_server, mqtt_port);
+  _mqttClient.setServer(server.c_str(), port);
   _clientId = "esPINDMD-" + WiFi.macAddress();
 }
 
@@ -30,7 +30,11 @@ void Mqtt::callback(char* topic, uint8_t* payload, size_t length) {
   Serial.print("] ");
 }
 
-void Mqtt::connect() { _mqttClient.connect(_clientId.c_str()); }
+void Mqtt::connect() {
+  Serial.println("MQTT: Connecting to server...");
+  _mqttClient.connect(_clientId.c_str());
+  Serial.println("MQTT: Connected to server!");
+}
 
 /**
  * Non-blocking function for reconnecting to the MQTT broker

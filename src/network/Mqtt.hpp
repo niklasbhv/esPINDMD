@@ -36,7 +36,7 @@ class Mqtt {
   void callback(char* topic, uint8_t* payload, size_t length);
 
  public:
-  Mqtt(const char* mqtt_server, uint16_t mqtt_port);
+  Mqtt();
   void connect();
   int reconnect();
   boolean connected();
