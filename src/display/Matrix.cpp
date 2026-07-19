@@ -21,14 +21,14 @@ namespace display::matrix {
 void Matrix::begin() {
   Serial.println("Matrix: Initizalizing the matrix component...");
 
-  uint8_t panel_width = panel_res_x * panel_count_x;
-  uint8_t panel_height = panel_res_x * panel_count_y;
-  uint8_t panel_chain = panel_count_x + panel_count_y - 1;
+  panel_width = panel_res_x * panel_count_x;
+  panel_height = panel_res_y * panel_count_y;
+  panel_chain = panel_count_x + panel_count_y - 1;
 
   // module configuration
-  HUB75_I2S_CFG mxconfig(panel_res_x,  // module width
+  HUB75_I2S_CFG mxconfig(panel_res_x,   // module width
                          panel_res_y,  // module height
-                         panel_chain   // chain length
+                         panel_chain    // chain length
   );
   mxconfig.gpio.r1 = pins_r1;
   mxconfig.gpio.g1 = pins_g1;
@@ -40,7 +40,7 @@ void Matrix::begin() {
   mxconfig.gpio.b = pins_b;
   mxconfig.gpio.c = pins_c;
   mxconfig.gpio.d = pins_d;
-  // mxconfig.gpio.e = E_PIN;
+  // mxconfig.gpio.e = pins_e;
   mxconfig.gpio.lat = pins_lat;
   mxconfig.gpio.oe = pins_oe;
   mxconfig.gpio.clk = pins_clk;

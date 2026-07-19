@@ -26,29 +26,29 @@
 
 namespace display::matrix {
 
-inline uint8_t panel_res_x = 64;
-inline uint8_t panel_res_y = 32;
-inline uint8_t panel_count_x = 2;
-inline uint8_t panel_count_y = 1;
+inline uint8_t panel_res_x = 64; // horizontal number of pixels per display
+inline uint8_t panel_res_y = 32; // vertical number of pixels per display
+inline uint8_t panel_count_x = 2; // number of displays on the x axis
+inline uint8_t panel_count_y = 1; // Number of displays on the y axis
 
-inline uint8_t panel_width = 0;
-inline uint8_t panel_height = 0;
-inline uint8_t panel_chain = 0;
+inline uint16_t panel_width = 0;
+inline uint16_t panel_height = 0;
+inline uint16_t panel_chain = 0;
 
-inline uint8_t pins_r1 = 36;
-inline uint8_t pins_g1 = 37;
-inline uint8_t pins_b1 = 38;
-inline uint8_t pins_r2 = 40;
-inline uint8_t pins_g2 = 41;
-inline uint8_t pins_b2 = 42;
-inline uint8_t pins_a = 0;
-inline uint8_t pins_b = 1;
-inline uint8_t pins_c = 2;
-inline uint8_t pins_d = 3;
-// inline uint8_t pins_e = -1;
-inline uint8_t pins_lat = 18;
-inline uint8_t pins_oe = 16;
-inline uint8_t pins_clk = 15;
+inline int8_t pins_r1 = 36;
+inline int8_t pins_g1 = 37;
+inline int8_t pins_b1 = 38;
+inline int8_t pins_r2 = 40;
+inline int8_t pins_g2 = 41;
+inline int8_t pins_b2 = 42;
+inline int8_t pins_a = 0;
+inline int8_t pins_b = 1;
+inline int8_t pins_c = 2;
+inline int8_t pins_d = 3;
+inline int8_t pins_e = -1;
+inline int8_t pins_lat = 18;
+inline int8_t pins_oe = 16;
+inline int8_t pins_clk = 15;
 
 #define CLOCK_R 231
 #define CLOCK_G 103

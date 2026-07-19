@@ -25,20 +25,23 @@ SystemController::SystemController() {};
  * Function used to initialize the SystemController
  */
 void SystemController::begin() {
+    // setup the SD Card configuration
+  _sd = std::make_unique<storage::sd::Sd>();
+  //delay(1000);
+  Serial.println("SystemController: Loading configuration...");
+  if (storage::configuration::Configuration::load()) {
+      Serial.println("SystemController: Configuration loaded");
+  }
+  else {
+      Serial.println("SystemController: No configuration found! Loading defaults");
+  }
+
   Serial.println("SystemController: Initializing the hardware components...");
   delay(5000);
   // setup the matrix configuration
   display::matrix::Matrix::begin();
-  display::matrix::Matrix::println("Matrix Initialized");
-  // setup the SD Card configuration
-  _sd = std::make_unique<storage::sd::Sd>();
-  display::matrix::Matrix::println("SD Card Initialized");
-  display::matrix::Matrix::println("Loading Configuration...");
-  _config = std::make_unique<storage::configuration::Configuration>();
-  display::matrix::Matrix::println("Configuration loaded!");
   // setup the Wi-Fi configuration
   _wifi = std::make_unique<network::wifi::Wifi>();
-  display::matrix::Matrix::println("Wi-Fi Initialized");
   if (WiFi.status() == WL_CONNECTED) {
     display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
   }

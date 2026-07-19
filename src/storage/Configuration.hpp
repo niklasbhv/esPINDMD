@@ -49,10 +49,15 @@ void get(const V& value, T& out) {
  * is generated.
  */
 class Configuration {
+ private:
+  static void loadWifiPassword();
+  static void loadMqttPassword();
+
  public:
-  Configuration();
-  void load();
-  void save();
+  static boolean load();
+  static boolean save();
+  // Disallow creating an instance of this object
+  Configuration() = delete;
 };
 
 }  // namespace storage::configuration

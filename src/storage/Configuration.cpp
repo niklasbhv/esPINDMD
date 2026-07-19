@@ -18,9 +18,12 @@
 
 namespace storage::configuration {
 
-Configuration::Configuration() {}
+void loadWifiPassword() {}
 
-void Configuration::load() {
+void loadMqttPassword() {}
+
+boolean Configuration::load() {
+  Serial.println("Controller: Loading configuration...");
   FsFile config_file;
   storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
@@ -30,7 +33,7 @@ void Configuration::load() {
   if (err) {
     Serial.print("deserializeJson() failed: ");
     Serial.println(err.c_str());
-    return;
+    return false;
   }
 
   // Clock values
@@ -69,7 +72,7 @@ void Configuration::load() {
   get(doc["display"]["matrix"]["pins"]["b"], display::matrix::pins_b);
   get(doc["display"]["matrix"]["pins"]["c"], display::matrix::pins_c);
   get(doc["display"]["matrix"]["pins"]["d"], display::matrix::pins_d);
-  // get(doc["display"]["matrix"]["pins"]["e"], display::matrix::pins_e);
+  get(doc["display"]["matrix"]["pins"]["e"], display::matrix::pins_e);
 
   get(doc["display"]["matrix"]["pins"]["lat"], display::matrix::pins_lat);
   get(doc["display"]["matrix"]["pins"]["oe"], display::matrix::pins_oe);
@@ -91,9 +94,11 @@ void Configuration::load() {
   get(doc["storage"]["sd"]["pins"]["miso"], storage::sd::pins_miso);
   get(doc["storage"]["sd"]["pins"]["clk"], storage::sd::pins_clk);
   get(doc["storage"]["sd"]["pins"]["cs"], storage::sd::pins_cs);
+
+  return true;
 }
 
-void Configuration::save() {
+boolean Configuration::save() {
   FsFile config_file;
   storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
   JsonDocument doc;
@@ -132,7 +137,7 @@ void Configuration::save() {
   doc["display"]["matrix"]["pins"]["b"] = display::matrix::pins_b;
   doc["display"]["matrix"]["pins"]["c"] = display::matrix::pins_c;
   doc["display"]["matrix"]["pins"]["d"] = display::matrix::pins_d;
-  // doc["display"]["matrix"]["pins"]["e"] = display::matrix::pins_e;
+  doc["display"]["matrix"]["pins"]["e"] = display::matrix::pins_e;
 
   doc["display"]["matrix"]["pins"]["lat"] = display::matrix::pins_lat;
   doc["display"]["matrix"]["pins"]["oe"] = display::matrix::pins_oe;
@@ -160,8 +165,11 @@ void Configuration::save() {
 
   if (serializeJsonPretty(doc, config_file) == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");
+    return false;
   }
   config_file.close();
+
+  return true;
 }
 
 }  // namespace storage::configuration
