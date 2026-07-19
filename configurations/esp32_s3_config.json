@@ -1,0 +1,76 @@
+{
+  "application": {
+    "clock": {
+      "colour": {
+        "r": 231,
+        "g": 103,
+        "b": 3
+      },
+      "ntp": {
+        "server": "pool.ntp.org",
+        "timezone": "Europe/Berlin",
+        "sync": {
+          "timeout": 60
+        }
+      }
+    }
+  },
+  "display": {
+    "matrix": {
+      "panel": {
+        "resolution": {
+          "x": 64,
+          "y": 32
+        },
+        "count": {
+          "x": 2,
+          "y": 1
+        }
+      },
+      "pins": {
+        "r1": 2,
+        "g1": 3,
+        "b1": 4,
+        "r2": 5,
+        "g2": 6,
+        "b2": 7,
+        "a": 14,
+        "b": 15,
+        "c": 16,
+        "d": 17,
+        "e": 0,
+        "lat": 10,
+        "oe": 9,
+        "clk": 8
+      }
+    }
+  },
+  "network": {
+    "mqtt": {
+      "enable": false,
+      "server": "mqtt.example.org",
+      "port": 1833,
+      "credentials": {
+        "username": "",
+        "password": ""
+      },
+      "client": {
+        "id": "esPINDMD-00:00:00:00:00:00"
+      }
+    },
+    "wifi": {
+      "ssid": "",
+      "password": ""
+    }
+  },
+  "storage": {
+    "sd": {
+      "pins": {
+        "mosi": 42,
+        "miso": 21,
+        "clk": 39,
+        "cs": 45
+      }
+    }
+  }
+}
