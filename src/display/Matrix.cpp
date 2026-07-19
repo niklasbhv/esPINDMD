@@ -40,7 +40,7 @@ void Matrix::begin() {
   mxconfig.gpio.b = pins_b;
   mxconfig.gpio.c = pins_c;
   mxconfig.gpio.d = pins_d;
-  // mxconfig.gpio.e = pins_e;
+  mxconfig.gpio.e = pins_e;
   mxconfig.gpio.lat = pins_lat;
   mxconfig.gpio.oe = pins_oe;
   mxconfig.gpio.clk = pins_clk;
@@ -96,7 +96,7 @@ void Matrix::printClock(String time) {
   dma_display->clearScreen();
   dma_display->setFont(&FreeMonoBold18pt7b);
   setCenteredCursorPosition(time);
-  dma_display->setTextColor(dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
+  dma_display->setTextColor(dma_display->color565(application::clock::colour_r, application::clock::colour_g, application::clock::colour_b));
   dma_display->setTextSize(1);
   dma_display->println(time);
 }
@@ -105,7 +105,7 @@ void Matrix::printDate(String date) {
   dma_display->clearScreen();
   dma_display->setFont(&FreeMonoBold9pt7b);
   setCenteredCursorPosition(date);
-  dma_display->setTextColor(dma_display->color565(CLOCK_R, CLOCK_G, CLOCK_B));
+  dma_display->setTextColor(dma_display->color565(application::clock::colour_r, application::clock::colour_g, application::clock::colour_b));
   dma_display->setTextSize(1);
   dma_display->println(date);
 }

@@ -22,6 +22,7 @@
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 #include "Fonts/FreeMonoBold9pt7b.h"
+#include "application/Clock.hpp"
 #include "display/Logo.hpp"
 
 namespace display::matrix {
@@ -49,10 +50,6 @@ inline int8_t pins_e = -1;
 inline int8_t pins_lat = 18;
 inline int8_t pins_oe = 16;
 inline int8_t pins_clk = 15;
-
-#define CLOCK_R 231
-#define CLOCK_G 103
-#define CLOCK_B 3
 
 // Global instance of the dma_display
 // Needed because of a limitation of the AnimationGIF library
