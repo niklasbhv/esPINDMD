@@ -49,8 +49,24 @@ void SystemController::begin() {
   Serial.println("SystemController: Initializing the software components...");
   // setup MQTT if enabled
   if (network::mqtt::enable) {
-    _mqtt = std::make_unique<network::mqtt::Mqtt>();
-    _mqtt->connect();
+    _mqtt = std::make_unique<network::mqtt::Mqtt>(
+        [this](const network::mqtt::LightCommand& command) {
+          if (command.brightness &&
+              *command.brightness != display::matrix::brightness) {
+            display::matrix::Matrix::setBrightness(*command.brightness);
+            // Saving is deferred to bundle changes, e.g. from a slider
+            _config_changed_at = millis();
+            _config_dirty = true;
+          }
+          if (command.on) {
+            display::matrix::Matrix::setPower(*command.on);
+          }
+        },
+        []() {
+          return network::mqtt::LightState{display::matrix::Matrix::isOn(),
+                                           display::matrix::brightness};
+        });
+    _mqtt->begin();
   }
 
   // setup the clock
@@ -73,7 +89,10 @@ bool SystemController::displayGif(String& filename) {
     return false;
   } else {
     display::matrix::Matrix::clearScreen();
-    while (_gif.playFrame(true, NULL)) {
+    // Keep the system parts running between frames and stop playback
+    // as soon as the matrix gets turned off
+    while (display::matrix::Matrix::isOn() && _gif.playFrame(true, NULL)) {
+      systemLoop();
     }
     _gif.close();
   }
@@ -81,13 +100,29 @@ bool SystemController::displayGif(String& filename) {
 }
 
 /**
+ * Function used to wait while keeping the system parts running,
+ * returns early if the matrix gets turned off
+ */
+void SystemController::wait(uint32_t ms) {
+  uint32_t start = millis();
+  while (millis() - start < ms && display::matrix::Matrix::isOn()) {
+    systemLoop();
+    delay(10);
+  }
+}
+
+/**
  * Function used for running the application parts of the device
  */
 void SystemController::applicationLoop() {
+  if (!display::matrix::Matrix::isOn()) return;
+
   display::matrix::Matrix::printClock(_clock->dateTime("H:i"));
-  delay(SHOW_APPLICATION_MS);
+  wait(SHOW_APPLICATION_MS);
+  if (!display::matrix::Matrix::isOn()) return;
   display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
-  delay(SHOW_APPLICATION_MS);
+  wait(SHOW_APPLICATION_MS);
+  if (!display::matrix::Matrix::isOn()) return;
   String filename;
   if (!_sd->next(filename)) {
     Serial.println(
@@ -100,4 +135,11 @@ void SystemController::applicationLoop() {
 /**
  * Function used for running the system parts of the device
  */
-void SystemController::systemLoop() {}
+void SystemController::systemLoop() {
+  if (_mqtt) _mqtt->loop();
+
+  if (_config_dirty && millis() - _config_changed_at >= SAVE_DELAY_MS) {
+    _config_dirty = false;
+    storage::configuration::Configuration::save();
+  }
+}

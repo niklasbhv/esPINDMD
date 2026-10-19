@@ -23,9 +23,19 @@ void loadWifiPassword() {}
 void loadMqttPassword() {}
 
 boolean Configuration::load() {
-  Serial.println("Controller: Loading configuration...");
+  Serial.println("Configuration: Loading configuration...");
+  // If saving was interrupted between removing the old and renaming the
+  // new file, only the temporary file is left
+  if (!storage::sd::Sd::exists(CONFIG_FILE_PATH) &&
+      storage::sd::Sd::exists(CONFIG_TMP_FILE_PATH)) {
+    Serial.println("Configuration: Restoring interrupted save");
+    storage::sd::Sd::replaceFile(CONFIG_TMP_FILE_PATH, CONFIG_FILE_PATH);
+  }
   FsFile config_file;
-  storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
+  if (!storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file)) {
+    Serial.println("Configuration: Failed to open configuration file");
+    return false;
+  }
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, config_file);
   storage::sd::Sd::closeFile(config_file);
@@ -77,6 +87,7 @@ boolean Configuration::load() {
   get(doc["display"]["matrix"]["pins"]["lat"], display::matrix::pins_lat);
   get(doc["display"]["matrix"]["pins"]["oe"], display::matrix::pins_oe);
   get(doc["display"]["matrix"]["pins"]["clk"], display::matrix::pins_clk);
+  get(doc["display"]["matrix"]["brightness"], display::matrix::brightness);
 
   // Mqtt values
   get(doc["network"]["mqtt"]["enable"], network::mqtt::enable);
@@ -87,6 +98,7 @@ boolean Configuration::load() {
       network::mqtt::username);
   get(doc["network"]["mqtt"]["credentials"]["password"],
       network::mqtt::password);
+  get(doc["network"]["mqtt"]["client"]["id"], network::mqtt::client_id);
 
   // Storage configuration
   // SD configuration
@@ -99,15 +111,14 @@ boolean Configuration::load() {
 }
 
 boolean Configuration::save() {
-  FsFile config_file;
-  storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file);
+  Serial.println("Configuration: Saving configuration...");
   JsonDocument doc;
 
   // Application configuration
   // Clock configuration
   doc["application"]["clock"]["colour"]["r"] = application::clock::colour_r;
-  doc["application"]["clock"]["colour"]["g"] = application::clock::colour_r;
-  doc["application"]["clock"]["colour"]["b"] = application::clock::colour_r;
+  doc["application"]["clock"]["colour"]["g"] = application::clock::colour_g;
+  doc["application"]["clock"]["colour"]["b"] = application::clock::colour_b;
   doc["application"]["clock"]["ntp"]["server"] = application::clock::ntp_server;
   doc["application"]["clock"]["ntp"]["timezone"] =
       application::clock::ntp_timezone;
@@ -142,6 +153,7 @@ boolean Configuration::save() {
   doc["display"]["matrix"]["pins"]["lat"] = display::matrix::pins_lat;
   doc["display"]["matrix"]["pins"]["oe"] = display::matrix::pins_oe;
   doc["display"]["matrix"]["pins"]["clk"] = display::matrix::pins_clk;
+  doc["display"]["matrix"]["brightness"] = display::matrix::brightness;
 
   // Network configuration
   // MQTT configuration
@@ -163,12 +175,23 @@ boolean Configuration::save() {
   doc["storage"]["sd"]["pins"]["clk"] = storage::sd::pins_clk;
   doc["storage"]["sd"]["pins"]["cs"] = storage::sd::pins_cs;
 
-  if (serializeJsonPretty(doc, config_file) == 0) {
+  FsFile config_file;
+  if (!storage::sd::Sd::openFileForWrite(CONFIG_TMP_FILE_PATH, config_file)) {
+    Serial.println("Configuration: Failed to open configuration file");
+    return false;
+  }
+  size_t written = serializeJsonPretty(doc, config_file);
+  // Closing flushes the file, a failure means the data is not on the card
+  if (!storage::sd::Sd::closeFile(config_file) || written == 0) {
     Serial.println("Configuration: Failed to write configuration to SD");
     return false;
   }
-  config_file.close();
+  if (!storage::sd::Sd::replaceFile(CONFIG_TMP_FILE_PATH, CONFIG_FILE_PATH)) {
+    Serial.println("Configuration: Failed to replace configuration file");
+    return false;
+  }
 
+  Serial.println("Configuration: Saved configuration!");
   return true;
 }
 

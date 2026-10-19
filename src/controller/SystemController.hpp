@@ -25,6 +25,8 @@
 #include "storage/Sd.hpp"
 
 #define SHOW_APPLICATION_MS 5000
+// Time without further changes before the configuration gets saved
+#define SAVE_DELAY_MS 5000
 
 class SystemController {
  private:
@@ -36,9 +38,13 @@ class SystemController {
   std::unique_ptr<network::mqtt::Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
   AnimatedGIF _gif;
+  // Pending configuration changes
+  bool _config_dirty = false;
+  uint32_t _config_changed_at = 0;
 
   void displayLogo();
   bool displayGif(String& filename);
+  void wait(uint32_t ms);
 
  public:
   SystemController();

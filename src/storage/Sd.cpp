@@ -130,7 +130,25 @@ bool Sd::openFile(const char *filename, FsFile &file) {
   return file.open(filename, O_READ);
 }
 
+/**
+ * Opens a file for writing, the file is created or truncated
+ */
+bool Sd::openFileForWrite(const char *filename, FsFile &file) {
+  return file.open(filename, O_WRONLY | O_CREAT | O_TRUNC);
+}
+
 bool Sd::closeFile(FsFile &file) { return file.close(); }
+
+bool Sd::exists(const char *filename) { return sd.exists(filename); }
+
+/**
+ * Replaces the target file with the source file, FAT does not
+ * support renaming onto an existing file so the target is removed first
+ */
+bool Sd::replaceFile(const char *source, const char *target) {
+  if (sd.exists(target) && !sd.remove(target)) return false;
+  return sd.rename(source, target);
+}
 
 bool SequentialIterator::next(String &filename) {
   // If we are in a subdirectory, check that first

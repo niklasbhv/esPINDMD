@@ -50,12 +50,35 @@ void Matrix::begin() {
   //  initialize the display
   dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
   dma_display->begin();
-  dma_display->setBrightness8(90);  // 0-255
+  dma_display->setBrightness8(power ? brightness : 0);
   dma_display->clearScreen();
   Serial.println("Matrix: Initizalized the matrix component!");
 }
 
 void Matrix::clearScreen() { dma_display->clearScreen(); }
+
+/**
+ * Sets the brightness (0-255), only applied to the panel while it is on
+ */
+void Matrix::setBrightness(uint8_t value) {
+  brightness = value;
+  if (power) dma_display->setBrightness8(brightness);
+}
+
+/**
+ * Turns the panel on or off, the brightness is kept for turning it back on
+ */
+void Matrix::setPower(bool on) {
+  power = on;
+  if (power) {
+    dma_display->setBrightness8(brightness);
+  } else {
+    dma_display->clearScreen();
+    dma_display->setBrightness8(0);
+  }
+}
+
+bool Matrix::isOn() { return power; }
 
 void Matrix::setCenteredCursorPosition(const String &text) {
   int16_t x, y;

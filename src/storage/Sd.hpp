@@ -28,10 +28,12 @@
 
 namespace storage::sd {
 
+// Currently unused Pin definitions for SoftSPI
 inline uint8_t pins_miso = 23;
 inline uint8_t pins_mosi = 19;
 inline uint8_t pins_clk = 18;
-inline uint8_t pins_cs = 5;
+
+inline uint8_t pins_cs = 45;  // 5;
 
 #define MAX_GIF_FILES 100
 #define MAX_FILENAME_LENGTH 64
@@ -103,7 +105,10 @@ class Sd {
   int loadFileIndex(const char *indexFilename);
   static bool openFile(String &filename, FsFile &file);
   static bool openFile(const char *filename, FsFile &file);
+  static bool openFileForWrite(const char *filename, FsFile &file);
   static bool closeFile(FsFile &file);
+  static bool exists(const char *filename);
+  static bool replaceFile(const char *source, const char *target);
   void resetIterator();
   bool next(String &filename);
   // Static functions for use with the AnimatedGIF library

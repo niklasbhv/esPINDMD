@@ -36,6 +36,9 @@ inline uint16_t panel_width = 0;
 inline uint16_t panel_height = 0;
 inline uint16_t panel_chain = 0;
 
+inline uint8_t brightness = 90;  // 0-255
+inline bool power = true;
+
 inline int8_t pins_r1 = 36;
 inline int8_t pins_g1 = 37;
 inline int8_t pins_b1 = 38;
@@ -62,6 +65,9 @@ class Matrix {
  public:
   static void begin();
   static void clearScreen();
+  static void setBrightness(uint8_t value);
+  static void setPower(bool on);
+  static bool isOn();
   static void println(const char* text, bool clear = true,
                       uint16_t cursor_x = 0, uint16_t cursor_y = 0);
   static void printClock(String time);

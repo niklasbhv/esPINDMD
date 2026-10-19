@@ -28,6 +28,9 @@
 namespace storage::configuration {
 
 #define CONFIG_FILE_PATH "/config.json"
+// The configuration is written to this file first and then renamed,
+// so a power loss while saving does not corrupt the configuration
+#define CONFIG_TMP_FILE_PATH "/config.json.tmp"
 
 /**
  * Helper function used to retrieve values of the correct type from a JSON
