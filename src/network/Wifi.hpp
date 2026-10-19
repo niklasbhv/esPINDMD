@@ -18,6 +18,8 @@
 
 #include <WiFiManager.h>
 
+#include <string>
+
 namespace network::wifi {
 
 inline std::string ssid = "";

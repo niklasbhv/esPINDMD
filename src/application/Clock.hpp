@@ -19,6 +19,8 @@
 #include <Arduino.h>
 #include <ezTime.h>
 
+#include <string>
+
 namespace application::clock {
 
 inline uint8_t colour_r = 231;
