@@ -29,6 +29,8 @@
 constexpr uint32_t SHOW_APPLICATION_MS = 5000;
 // Time without further changes before the configuration gets saved
 constexpr uint32_t SAVE_DELAY_MS = 5000;
+// Number of indexed GIFs between two updates of the progress on the matrix
+constexpr uint32_t INDEX_PROGRESS_STEP = 10;
 // Time notices, e.g. a missing SD card, are shown on boot
 constexpr uint32_t NOTICE_MS = 3000;
 

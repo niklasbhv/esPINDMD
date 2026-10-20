@@ -71,7 +71,6 @@ bool Sd::begin() {
     Serial.println("SD: No SD card found, continuing without GIFs");
     return false;
   }
-  _sequential_iterator = std::make_unique<SequentialIterator>(GIF_ROOT_PATH);
   Serial.println("SD: Initialized the sd component!");
   return true;
 }
@@ -102,15 +101,145 @@ bool Sd::replaceFile(const char* source, const char* target) {
   return sd.rename(source, target);
 }
 
-void Sd::resetIterator() {
-  if (!mounted) return;
-  _sequential_iterator = std::make_unique<SequentialIterator>(GIF_ROOT_PATH);
+/**
+ * Function used to rebuild the GIF index and open it. If building fails,
+ * the previous index is used.
+ *
+ * @param progress Invoked with the number of indexed files
+ */
+bool Sd::indexGifs(const IndexProgress& progress) {
+  if (!mounted) return false;
+  GifIndex::build(progress);
+  return _index.open();
 }
 
+uint32_t Sd::gifCount() const { return _index.count(); }
+
+/**
+ * Function used to restart the playback in order from the beginning
+ */
+void Sd::resetIterator() { _index.rewind(); }
+
+/**
+ * Function used to get the next GIF, either randomly or in order
+ *
+ * @return false if there are no GIFs or all of them were played in order
+ */
 bool Sd::next(String& file_path) {
   file_path.clear();
   if (!mounted) return false;
-  return _sequential_iterator->next(file_path);
+  return _index.next(file_path);
+}
+
+/**
+ * Function used to write the paths of all GIFs into the index
+ */
+bool GifIndex::build(const IndexProgress& progress) {
+  Serial.println("SD: Indexing GIFs...");
+  uint32_t start = millis();
+  FsFile index;
+  if (!index.open(INDEX_TMP_PATH, O_WRONLY | O_CREAT | O_TRUNC)) {
+    Serial.println("SD: Failed to create the index");
+    return false;
+  }
+
+  SequentialIterator iterator(GIF_ROOT_PATH);
+  String path;
+  uint32_t count = 0;
+  char record[INDEX_RECORD_LENGTH];
+  bool ok = true;
+  while (iterator.next(path)) {
+    if (path.length() >= INDEX_RECORD_LENGTH) {
+      Serial.printf("SD: Skipping %s, the path is too long\r\n", path.c_str());
+      continue;
+    }
+    memset(record, 0, sizeof(record));
+    memcpy(record, path.c_str(), path.length());
+    if (index.write(record, sizeof(record)) != sizeof(record)) {
+      ok = false;
+      break;
+    }
+    count++;
+    if (progress) progress(count);
+  }
+
+  // Closing flushes the file, a failure means the data is not on the card
+  ok = index.close() && ok;
+  if (!ok || !Sd::replaceFile(INDEX_TMP_PATH, INDEX_PATH)) {
+    Serial.println("SD: Failed to write the index");
+    return false;
+  }
+  Serial.printf("SD: Indexed %lu GIFs in %lu ms\r\n",
+                static_cast<unsigned long>(count),
+                static_cast<unsigned long>(millis() - start));
+  return true;
+}
+
+/**
+ * Function used to open the index for reading
+ */
+bool GifIndex::open() {
+  if (_file) _file.close();
+  _count = 0;
+  _position = 0;
+  _recent_size = 0;
+  if (!_file.open(INDEX_PATH, O_RDONLY)) {
+    Serial.println("SD: No GIF index available");
+    return false;
+  }
+  _count = _file.size() / INDEX_RECORD_LENGTH;
+  return true;
+}
+
+uint32_t GifIndex::count() const { return _count; }
+
+/**
+ * Function used to get the next GIF of the index
+ *
+ * @return false if the index is empty or all GIFs were played in order
+ */
+bool GifIndex::next(String& path) {
+  if (_count == 0) return false;
+  if (!play_random) {
+    if (_position >= _count) return false;
+    return read(_position++, path);
+  }
+
+  // Avoid repeating the recently played GIFs, at most half of the GIFs are
+  // remembered so there are always enough left to pick from
+  uint32_t record = esp_random() % _count;
+  while (recentlyPlayed(record)) record = esp_random() % _count;
+  remember(record);
+  return read(record, path);
+}
+
+void GifIndex::rewind() { _position = 0; }
+
+bool GifIndex::read(uint32_t record, String& path) {
+  char buffer[INDEX_RECORD_LENGTH];
+  if (!_file.seekSet(static_cast<uint64_t>(record) * INDEX_RECORD_LENGTH) ||
+      _file.read(buffer, sizeof(buffer)) != sizeof(buffer)) {
+    Serial.println("SD: Failed to read the index");
+    return false;
+  }
+  buffer[sizeof(buffer) - 1] = '\0';
+  path = buffer;
+  return true;
+}
+
+bool GifIndex::recentlyPlayed(uint32_t record) const {
+  for (size_t i = 0; i < _recent_size; i++) {
+    if (_recent[i] == record) return true;
+  }
+  return false;
+}
+
+void GifIndex::remember(uint32_t record) {
+  size_t capacity = std::min<size_t>(RECENT_COUNT, _count / 2);
+  if (capacity == 0) return;
+  _recent[_recent_next % capacity] = record;
+  _recent_next = (_recent_next + 1) % capacity;
+  _recent_size = std::min(_recent_size + 1, capacity);
 }
 
 SequentialIterator::SequentialIterator(const String& path) : _path(path) {

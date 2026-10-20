@@ -13,6 +13,9 @@
           "timeout": 60
         }
       }
+    },
+    "gif": {
+      "random": true
     }
   },
   "display": {

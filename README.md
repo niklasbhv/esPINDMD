@@ -12,7 +12,7 @@ esPINDMD supports the following features:
 
 - Support for ESP32 and ESP32-S3
 - Easy to assemble and setup
-- Sequential or indexed based GIF file browsing
+- Random or sequential GIF playback
 - Wi-Fi and Ethernet support
 - Support for MQTT including Home Assistant auto discovery
 - Support for over the air updates
@@ -37,7 +37,7 @@ The esPINDMD can be set up in two ways, which can also be combined:
 - **Wi-Fi setup portal**: Without a configured network, the esPINDMD opens the Wi-Fi network `esPINDMD` (password `pinball12345`) for 180 seconds and shows its details on the matrix. Connect to it and open `http://192.168.4.1` to select a network.
 - **Serial console**: The menu described below is available a few seconds after powering on, also while the setup portal is open. This includes the Wi-Fi credentials (`network/wifi`) as well as the pins of the matrix and the SD card.
 
-GIFs are played from the `gif` directory of the SD card, including all sub directories. Without a SD card, the esPINDMD runs as a clock only.
+GIFs are played from the `gif` directory of the SD card, including all sub directories. On every boot, the esPINDMD creates an index of all GIFs (`gif/.index`), which is used to play them in random order. Setting `application/gif/random` to `off` plays them in the order of the index instead. Without a SD card, the esPINDMD runs as a clock only.
 
 ## Configuration
 

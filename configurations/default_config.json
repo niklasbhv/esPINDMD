@@ -13,6 +13,9 @@
           "timeout": 60
         }
       }
+    },
+    "gif": {
+      "random": true
     }
   },
   "display": {
@@ -67,8 +70,8 @@
   "storage": {
     "sd": {
       "pins": {
-        "mosi": 19,
-        "miso": 23,
+        "mosi": 23,
+        "miso": 19,
         "clk": 18,
         "cs": 5
       }

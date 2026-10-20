@@ -32,6 +32,19 @@ void SystemController::begin() {
   // setup the matrix configuration
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
+  // Index the GIFs, showing the number of indexed GIFs on the matrix
+  if (_sd->available()) {
+    display::matrix::Matrix::printLines({"Indexing GIFs", "0"});
+    _sd->indexGifs([](uint32_t count) {
+      if (count % INDEX_PROGRESS_STEP != 0) return;
+      display::matrix::Matrix::printLines({"Indexing GIFs", String(count)});
+    });
+    display::matrix::Matrix::printLines(
+        {"Indexed GIFs", String(_sd->gifCount())});
+    delay(NOTICE_MS);
+    display::matrix::Matrix::clearScreen();
+    display::matrix::Matrix::printLogo();
+  }
   // setup the Wi-Fi configuration, the setup portal runs in the background
   network::wifi::PortalCallbacks callbacks;
   callbacks.on_open = []() {
@@ -230,11 +243,10 @@ void SystemController::applicationLoop() {
     wait(SHOW_APPLICATION_MS);
   }
   // GIFs are only available with a SD card
-  if (!keepRendering() || !_sd->available()) return;
+  if (!keepRendering() || !_sd->available() || _sd->gifCount() == 0) return;
   String filename;
   if (!_sd->next(filename)) {
-    Serial.println(
-        "SystemController: Iterator exhausted, resetting the iterator!");
+    // Only happens in order, start over with the first GIF
     _sd->resetIterator();
   } else {
     displayGif(filename);

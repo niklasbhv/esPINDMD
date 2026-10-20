@@ -24,6 +24,7 @@
 #include <SPI.h>
 #include <SdFat.h>
 
+#include <functional>
 #include <memory>
 
 namespace storage::sd {
@@ -34,15 +35,27 @@ inline uint8_t pins_mosi = MOSI;
 inline uint8_t pins_clk = SCK;
 inline uint8_t pins_cs = SS;
 
-constexpr size_t MAX_FILENAME_LENGTH = 64;
+// Play the GIFs in random order instead of the order of the index
+inline bool play_random = true;
+
+// Maximum length of a FAT file name including the terminator
+constexpr size_t MAX_FILENAME_LENGTH = 256;
 // Directory containing the GIF files, including all sub directories
 constexpr const char* GIF_ROOT_PATH = "/gif";
+// Index of all GIF files, hidden so it is skipped while indexing
+constexpr const char* INDEX_PATH = "/gif/.index";
+constexpr const char* INDEX_TMP_PATH = "/gif/.index.tmp";
+// Every path is stored as a fixed size record, so the n-th path is found
+// with a single seek
+constexpr size_t INDEX_RECORD_LENGTH = 256;
+// Number of recently played GIFs that are not picked again randomly
+constexpr size_t RECENT_COUNT = 16;
 // SPI clock speed, this is optimized for stability
 constexpr uint32_t SPI_CLOCK = SD_SCK_MHZ(4);
 
 /**
  * Iterates over all GIF files of a directory and its sub directories,
- * hidden files (starting with a dot) are skipped
+ * hidden files (starting with a dot) are skipped. Used to build the index.
  */
 class SequentialIterator {
  private:
@@ -54,6 +67,34 @@ class SequentialIterator {
  public:
   explicit SequentialIterator(const String& path);
   bool next(String& file_path);
+};
+
+using IndexProgress = std::function<void(uint32_t count)>;
+
+/**
+ * Index of all GIF files on the SD card, used to pick the next GIF either
+ * in order or randomly without keeping a list of all files in memory
+ */
+class GifIndex {
+ private:
+  FsFile _file;
+  uint32_t _count = 0;
+  uint32_t _position = 0;
+  // Ring buffer of recently played records
+  uint32_t _recent[RECENT_COUNT];
+  size_t _recent_size = 0;
+  size_t _recent_next = 0;
+
+  bool read(uint32_t record, String& path);
+  bool recentlyPlayed(uint32_t record) const;
+  void remember(uint32_t record);
+
+ public:
+  static bool build(const IndexProgress& progress);
+  bool open();
+  uint32_t count() const;
+  bool next(String& path);
+  void rewind();
 };
 
 // Global instances of sd card component objects
@@ -70,10 +111,12 @@ inline bool mounted = false;
  */
 class Sd {
  private:
-  std::unique_ptr<SequentialIterator> _sequential_iterator;
+  GifIndex _index;
 
  public:
   bool begin();
+  bool indexGifs(const IndexProgress& progress);
+  uint32_t gifCount() const;
   static bool available();
   static bool openFile(const char* filename, FsFile& file);
   static bool openFileForWrite(const char* filename, FsFile& file);

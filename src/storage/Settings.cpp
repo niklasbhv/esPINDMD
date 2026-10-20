@@ -47,6 +47,7 @@ Setting all[] = {
   {"application/clock/ntp/server", &clock::ntp_server, 0, 63, REBOOT, "NTP server used to sync the time"},
   {"application/clock/ntp/timezone", &clock::ntp_timezone, 0, 63, REBOOT, "Olson timezone, e.g. Europe/Berlin"},
   {"application/clock/ntp/sync/timeout", &clock::ntp_sync_timeout, 0, 255, REBOOT, "Seconds between two NTP syncs"},
+  {"application/gif/random", &sd::play_random, 0, 1, NONE, "Play the GIFs in random order"},
 
   // Display configuration
   {"display/matrix/panel/resolution/x", &matrix::panel_res_x, 1, 255, REBOOT, "Horizontal pixels per panel"},
