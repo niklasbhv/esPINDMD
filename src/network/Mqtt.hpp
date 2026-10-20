@@ -26,7 +26,7 @@
 
 namespace network::mqtt {
 
-inline boolean enable = false;
+inline bool enable = false;
 inline std::string server = "mqtt.example.org";
 inline uint16_t port = 1883;
 inline std::string username = "";

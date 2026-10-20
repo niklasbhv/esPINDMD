@@ -49,10 +49,10 @@ void Mqtt::begin() {
 
   _mqtt_client.setServer(server.c_str(), port);
   _mqtt_client.setBufferSize(BUFFER_SIZE);
-  _mqtt_client.setCallback([this](char* topic, uint8_t* payload,
-                                  size_t length) {
-    onMessage(topic, payload, length);
-  });
+  _mqtt_client.setCallback(
+      [this](char* topic, uint8_t* payload, size_t length) {
+        onMessage(topic, payload, length);
+      });
 
   connect();
 }
@@ -70,9 +70,9 @@ bool Mqtt::connect() {
   const char* pass = password.empty() ? nullptr : password.c_str();
   // The last will marks the device as unavailable if the connection drops
   if (!_mqtt_client.connect(_client_id.c_str(), user, pass,
-                            _availability_topic.c_str(), 0, true,
-                            "offline")) {
-    Serial.printf("MQTT: Connection failed, state %d\r\n", _mqtt_client.state());
+                            _availability_topic.c_str(), 0, true, "offline")) {
+    Serial.printf("MQTT: Connection failed, state %d\r\n",
+                  _mqtt_client.state());
     return false;
   }
   Serial.println("MQTT: Connected to server!");

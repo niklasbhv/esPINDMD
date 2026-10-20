@@ -16,22 +16,14 @@
 
 #pragma once
 
-#include <ArduinoJson.h>
-#include <WiFiManager.h>
-
-#include "Sd.hpp"
-#include "application/Clock.hpp"
-#include "display/Matrix.hpp"
-#include "network/Mqtt.hpp"
-#include "network/Wifi.hpp"
-#include "update/Ota.hpp"
+#include <Arduino.h>
 
 namespace storage::configuration {
 
-#define CONFIG_FILE_PATH "/config.json"
+constexpr const char* CONFIG_FILE_PATH = "/config.json";
 // The configuration is written to this file first and then renamed,
 // so a power loss while saving does not corrupt the configuration
-#define CONFIG_TMP_FILE_PATH "/config.json.tmp"
+constexpr const char* CONFIG_TMP_FILE_PATH = "/config.json.tmp";
 
 /**
  * The configuration class is used for reading
@@ -42,8 +34,8 @@ namespace storage::configuration {
  */
 class Configuration {
  public:
-  static boolean load();
-  static boolean save();
+  static bool load();
+  static bool save();
   // Disallow creating an instance of this object
   Configuration() = delete;
 };

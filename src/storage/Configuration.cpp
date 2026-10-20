@@ -16,6 +16,9 @@
 
 #include "Configuration.hpp"
 
+#include <ArduinoJson.h>
+
+#include "Sd.hpp"
 #include "Settings.hpp"
 
 namespace storage::configuration {
@@ -58,7 +61,7 @@ static JsonVariant create(JsonDocument& doc, const char* path) {
   return node[segment];
 }
 
-boolean Configuration::load() {
+bool Configuration::load() {
   Serial.println("Configuration: Loading configuration...");
   // If saving was interrupted between removing the old and renaming the
   // new file, only the temporary file is left
@@ -82,21 +85,39 @@ boolean Configuration::load() {
     return false;
   }
 
-  // Missing values or values of the wrong type keep their defaults
+  // Missing, invalid or out of range values keep their defaults
   for (size_t i = 0; i < settings::count; i++) {
     const settings::Setting& setting = settings::all[i];
     JsonVariantConst value = find(doc, setting.path);
+    if (value.isNull()) continue;
     std::visit(
-        [&value](auto* target) {
+        [&value, &setting](auto* target) {
           using T = std::remove_pointer_t<decltype(target)>;
-          if (value.is<T>()) *target = value.as<T>();
+          if (!value.is<T>()) {
+            Serial.printf("Configuration: Ignoring %s, invalid type\r\n",
+                          setting.path);
+            return;
+          }
+          T result = value.as<T>();
+          int32_t checked = 0;
+          if constexpr (std::is_same_v<T, std::string>) {
+            checked = result.length();
+          } else {
+            checked = static_cast<int32_t>(result);
+          }
+          if (!setting.accepts(checked)) {
+            Serial.printf("Configuration: Ignoring %s, allowed is %s\r\n",
+                          setting.path, setting.range().c_str());
+            return;
+          }
+          *target = result;
         },
         setting.value);
   }
   return true;
 }
 
-boolean Configuration::save() {
+bool Configuration::save() {
   Serial.println("Configuration: Saving configuration...");
   JsonDocument doc;
   doc.to<JsonObject>();

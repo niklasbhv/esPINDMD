@@ -113,8 +113,9 @@ void Cli::handleMenuInput(const std::string& input) {
     printInfo();
   } else if (input == "q") {
     if (_unsaved) {
-      Serial.println("Note: There are unsaved changes, they are kept until "
-                     "the next reboot");
+      Serial.println(
+          "Note: There are unsaved changes, they are kept until "
+          "the next reboot");
     }
     Serial.println("Closed the menu, press Enter to open it again");
     _active = false;
@@ -199,9 +200,8 @@ void Cli::back() {
 void Cli::save() {
   if (storage::configuration::Configuration::save()) {
     _unsaved = false;
-    Serial.println(_reboot_required
-                       ? "Saved, reboot (r) to apply all changes"
-                       : "Saved");
+    Serial.println(_reboot_required ? "Saved, reboot (r) to apply all changes"
+                                    : "Saved");
   } else {
     Serial.println("Saving failed, check the SD card");
   }
@@ -209,8 +209,9 @@ void Cli::save() {
 
 void Cli::reboot() {
   if (_unsaved) {
-    Serial.println("There are unsaved changes which will be lost, enter yes "
-                   "to reboot anyway");
+    Serial.println(
+        "There are unsaved changes which will be lost, enter yes "
+        "to reboot anyway");
   } else {
     Serial.println("Enter yes to reboot");
   }
@@ -285,7 +286,8 @@ void Cli::printMenu() {
     } else if (entry.action) {
       value = std::string("[") + entry.action->description + "]";
     }
-    if (name.length() < NAME_WIDTH) name.append(NAME_WIDTH - name.length(), ' ');
+    if (name.length() < NAME_WIDTH)
+      name.append(NAME_WIDTH - name.length(), ' ');
     Serial.printf("  %2u) %s %s\r\n", static_cast<unsigned>(i + 1),
                   name.c_str(), value.c_str());
   }

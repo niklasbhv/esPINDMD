@@ -17,11 +17,6 @@
 #include "SystemController.hpp"
 
 /**
- * Constructor of the SystemController class
- */
-SystemController::SystemController() {};
-
-/**
  * Function used to initialize the SystemController
  */
 void SystemController::begin() {
@@ -55,44 +50,9 @@ void SystemController::begin() {
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
-  // setup MQTT if enabled
   _ota.begin();
-  if (network::mqtt::enable) {
-    network::mqtt::Handlers handlers;
-    handlers.on_light_command =
-        [this](const network::mqtt::LightCommand& command) {
-          if (command.brightness &&
-              *command.brightness != display::matrix::brightness) {
-            display::matrix::Matrix::setBrightness(*command.brightness);
-            // Saving is deferred to bundle changes, e.g. from a slider
-            _config_changed_at = millis();
-            _config_dirty = true;
-          }
-          if (command.on) {
-            display::matrix::Matrix::setPower(*command.on);
-          }
-        };
-    handlers.get_light_state = []() {
-      return network::mqtt::LightState{display::matrix::Matrix::isOn(),
-                                       display::matrix::brightness};
-    };
-    handlers.on_install = [this]() { _ota.requestInstall(); };
-    handlers.get_update_state = [this]() {
-      const update::ota::Release& latest = _ota.latest();
-      network::mqtt::UpdateState state;
-      state.installed_version = update::ota::Ota::installedVersion();
-      // Until a release is known the installed version is the latest one
-      state.latest_version =
-          _ota.checked() ? latest.version : state.installed_version;
-      state.release_url = latest.release_url;
-      state.release_summary = latest.release_summary;
-      state.in_progress = _ota.installing();
-      state.percentage = _ota.progress();
-      return state;
-    };
-    _mqtt = std::make_unique<network::mqtt::Mqtt>(std::move(handlers));
-    _mqtt->begin();
-  }
+  // setup MQTT if enabled
+  if (network::mqtt::enable) setupMqtt();
 
   // setup the clock
   _clock = std::make_unique<application::clock::Clock>();
@@ -102,6 +62,46 @@ void SystemController::begin() {
   setupCli();
   Serial.println("SystemController: Initialized the software components!");
   delay(2000);
+}
+
+/**
+ * Function used to set up MQTT and connect it to the matrix and the updater
+ */
+void SystemController::setupMqtt() {
+  network::mqtt::Handlers handlers;
+  handlers.on_light_command =
+      [this](const network::mqtt::LightCommand& command) {
+        if (command.brightness &&
+            *command.brightness != display::matrix::brightness) {
+          display::matrix::Matrix::setBrightness(*command.brightness);
+          // Saving is deferred to bundle changes, e.g. from a slider
+          _config_changed_at = millis();
+          _config_dirty = true;
+        }
+        if (command.on) {
+          display::matrix::Matrix::setPower(*command.on);
+        }
+      };
+  handlers.get_light_state = []() {
+    return network::mqtt::LightState{display::matrix::Matrix::isOn(),
+                                     display::matrix::brightness};
+  };
+  handlers.on_install = [this]() { _ota.requestInstall(); };
+  handlers.get_update_state = [this]() {
+    const update::ota::Release& latest = _ota.latest();
+    network::mqtt::UpdateState state;
+    state.installed_version = update::ota::Ota::installedVersion();
+    // Until a release is known the installed version is the latest one
+    state.latest_version =
+        _ota.checked() ? latest.version : state.installed_version;
+    state.release_url = latest.release_url;
+    state.release_summary = latest.release_summary;
+    state.in_progress = _ota.installing();
+    state.percentage = _ota.progress();
+    return state;
+  };
+  _mqtt = std::make_unique<network::mqtt::Mqtt>(std::move(handlers));
+  _mqtt->begin();
 }
 
 /**
@@ -135,8 +135,9 @@ void SystemController::setupCli() {
                        if (_ota.updateAvailable()) {
                          _ota.requestInstall();
                        } else {
-                         Serial.println("No update available, run check "
-                                        "first");
+                         Serial.println(
+                             "No update available, run check "
+                             "first");
                        }
                      },
                      true});
@@ -157,7 +158,7 @@ void SystemController::setupCli() {
 /**
  * Function used for loading and displaying the given GIF file
  */
-bool SystemController::displayGif(String& filename) {
+bool SystemController::displayGif(const String& filename) {
   if (!_gif.open(filename.c_str(), storage::sd::Sd::openGifFile,
                  storage::sd::Sd::closeGifFile, storage::sd::Sd::readGifFile,
                  storage::sd::Sd::seekGifFile,
@@ -217,12 +218,13 @@ void SystemController::applicationLoop() {
   String filename;
   if (!_sd->next(filename)) {
     Serial.println(
-        "SystemController: Iterater exhausted, resetting the iterator!");
+        "SystemController: Iterator exhausted, resetting the iterator!");
     _sd->resetIterator();
   } else {
     displayGif(filename);
   }
 }
+
 /**
  * Function used for running the system parts of the device
  */

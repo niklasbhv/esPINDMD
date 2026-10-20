@@ -28,55 +28,32 @@
 
 namespace storage::sd {
 
-// Currently unused Pin definitions for SoftSPI
-inline uint8_t pins_miso = 23;
-inline uint8_t pins_mosi = 19;
-inline uint8_t pins_clk = 18;
+// Defaults to the SPI pins of the board
+inline uint8_t pins_miso = MISO;
+inline uint8_t pins_mosi = MOSI;
+inline uint8_t pins_clk = SCK;
+inline uint8_t pins_cs = SS;
 
-inline uint8_t pins_cs = 45;  // 5;
+constexpr size_t MAX_FILENAME_LENGTH = 64;
+// Directory containing the GIF files, including all sub directories
+constexpr const char* GIF_ROOT_PATH = "/gif";
+// SPI clock speed, this is optimized for stability
+constexpr uint32_t SPI_CLOCK = SD_SCK_MHZ(4);
 
-#define MAX_GIF_FILES 100
-#define MAX_FILENAME_LENGTH 64
-#define MAX_DIRNAME_LENGTH 64
-#define GIF_ROOT_PATH "/gif"
-#define INDEX_FILENAME ".index"
-
-// defines the SPI clock speed, this is optimized for stability
-#define SPI_CLOCK SD_SCK_MHZ(4)
-
+/**
+ * Iterates over all GIF files of a directory and its sub directories,
+ * hidden files (starting with a dot) are skipped
+ */
 class SequentialIterator {
  private:
-  SdFs &_sd;
   FsFile _dir;
-  bool _isOpen;
   String _path;
-  SequentialIterator *_child;
+  bool _is_open = false;
+  std::unique_ptr<SequentialIterator> _child;
 
  public:
-  SequentialIterator(SdFs &sd, String path)
-      : _sd(sd), _isOpen(false), _child(nullptr), _path(path) {
-    if (_dir.open(path.c_str())) {
-      _isOpen = true;
-    } else {
-      Serial.print("SequentialIterator: Failed to open directory: ");
-      Serial.println(path);
-    }
-  }
-  ~SequentialIterator() {
-    if (_child) {
-      delete _child;
-    }
-    if (_isOpen) {
-      _dir.close();
-    }
-  }
-  bool next(String &file_path);
-};
-
-class IndexedIterator {
- private:
- public:
-  void next();
+  explicit SequentialIterator(const String& path);
+  bool next(String& file_path);
 };
 
 // Global instances of sd card component objects
@@ -86,36 +63,26 @@ inline FsFile file;
 
 /**
  * Class used for initialization and low level access to
- * files on the SD Card. It also features functionality
- * for generating a index file.
+ * files on the SD Card.
  */
 class Sd {
  private:
-  String _gifFiles[MAX_GIF_FILES];
-  int _gifCount = 0;
-  std::unique_ptr<SequentialIterator> _sequentialIterator;
-  std::unique_ptr<IndexedIterator> _indexedIterator;
-
-  bool isGifFile(const char *filename);
-  void indexGifFiles(SdFile dir, String pathPrefix = "");
+  std::unique_ptr<SequentialIterator> _sequential_iterator;
 
  public:
   Sd();
-  int generateFileIndex(const char *folderPath, const char *indexFilename);
-  int loadFileIndex(const char *indexFilename);
-  static bool openFile(String &filename, FsFile &file);
-  static bool openFile(const char *filename, FsFile &file);
-  static bool openFileForWrite(const char *filename, FsFile &file);
-  static bool closeFile(FsFile &file);
-  static bool exists(const char *filename);
-  static bool replaceFile(const char *source, const char *target);
+  static bool openFile(const char* filename, FsFile& file);
+  static bool openFileForWrite(const char* filename, FsFile& file);
+  static bool closeFile(FsFile& file);
+  static bool exists(const char* filename);
+  static bool replaceFile(const char* source, const char* target);
   void resetIterator();
-  bool next(String &filename);
+  bool next(String& filename);
   // Static functions for use with the AnimatedGIF library
-  static void *openGifFile(const char *fname, int32_t *pSize);
-  static void closeGifFile(void *pHandle);
-  static int32_t readGifFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
-  static int32_t seekGifFile(GIFFILE *pFile, int32_t iPosition);
+  static void* openGifFile(const char* fname, int32_t* pSize);
+  static void closeGifFile(void* pHandle);
+  static int32_t readGifFile(GIFFILE* pFile, uint8_t* pBuf, int32_t iLen);
+  static int32_t seekGifFile(GIFFILE* pFile, int32_t iPosition);
 };
 
 }  // namespace storage::sd

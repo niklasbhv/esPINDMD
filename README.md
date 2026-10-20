@@ -20,13 +20,15 @@ esPINDMD supports the following features:
 
 ## Setup the development environment
 
-To setup this project, a git patch has to be applied before building using the following command from the root directory of the project.
+The project is a regular [PlatformIO](https://platformio.org/) project. On Nix, `nix-shell` provides PlatformIO along with all other tools used by this project.
 
 ```
-bash scripts/apply_patches.sh
+pio run -e adafruit_metro_esp32s3                 # build the firmware
+pio run -e adafruit_metro_esp32s3 -t upload       # build and flash the firmware
+pio device monitor                                # open the serial console
 ```
 
-Afterwards, the project can be build like a normal platform.io project.
+The available environments are `esp32dev`, `sparkfun_esp32_iot_redboard`, `esp32-s3-devkitm-1` and `adafruit_metro_esp32s3`. The code is formatted using `make format`.
 
 ## Setup the esPINDMD
 

@@ -18,12 +18,11 @@
 
 #include <AnimatedGIF.h>
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include <SdFat.h>
+
+#include <memory>
 
 #include "Fonts/FreeMonoBold18pt7b.h"
 #include "Fonts/FreeMonoBold9pt7b.h"
-#include "application/Clock.hpp"
-#include "display/Logo.hpp"
 
 namespace display::matrix {
 
@@ -61,6 +60,8 @@ inline std::unique_ptr<MatrixPanel_I2S_DMA> dma_display;
 class Matrix {
  private:
   static void setCenteredCursorPosition(const String& text);
+  static uint16_t textColour();
+  static void printCentered(const String& text, const GFXfont* font);
 
  public:
   static void begin();
@@ -68,10 +69,8 @@ class Matrix {
   static void setBrightness(uint8_t value);
   static void setPower(bool on);
   static bool isOn();
-  static void println(const char* text, bool clear = true,
-                      uint16_t cursor_x = 0, uint16_t cursor_y = 0);
-  static void printClock(String time);
-  static void printDate(String date);
+  static void printClock(const String& time);
+  static void printDate(const String& date);
   static void printLogo();
   static void printUpdateProgress(uint8_t percent);
   static void printLines(std::initializer_list<String> lines);

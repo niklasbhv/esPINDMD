@@ -47,8 +47,9 @@ void Ota::begin() {
   Serial.printf("OTA: Running firmware %s for %s\r\n", ESPINDMD_VERSION,
                 ESPINDMD_ENV);
   if (pendingConfirm()) {
-    Serial.println("OTA: Firmware is not confirmed yet, waiting for it to "
-                   "connect before confirming");
+    Serial.println(
+        "OTA: Firmware is not confirmed yet, waiting for it to "
+        "connect before confirming");
   }
 }
 
@@ -200,8 +201,8 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
       continue;
     }
 
-    size_t chunk = std::min({available, sizeof(buffer),
-                             static_cast<size_t>(length) - written});
+    size_t chunk = std::min(
+        {available, sizeof(buffer), static_cast<size_t>(length) - written});
     size_t read = stream->readBytes(buffer, chunk);
     mbedtls_sha256_update(&sha, buffer, read);
     if (Update.write(buffer, read) != read) {
@@ -336,8 +337,8 @@ const char* Ota::installedVersion() { return ESPINDMD_VERSION; }
  */
 bool Ota::pendingConfirm() {
   esp_ota_img_states_t state;
-  return esp_ota_get_state_partition(esp_ota_get_running_partition(),
-                                     &state) == ESP_OK &&
+  return esp_ota_get_state_partition(esp_ota_get_running_partition(), &state) ==
+             ESP_OK &&
          state == ESP_OTA_IMG_PENDING_VERIFY;
 }
 

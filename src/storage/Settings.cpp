@@ -52,7 +52,7 @@ Setting all[] = {
   {"display/matrix/panel/resolution/x", &matrix::panel_res_x, 1, 255, REBOOT, "Horizontal pixels per panel"},
   {"display/matrix/panel/resolution/y", &matrix::panel_res_y, 1, 255, REBOOT, "Vertical pixels per panel"},
   {"display/matrix/panel/count/x", &matrix::panel_count_x, 1, 8, REBOOT, "Number of panels on the x axis"},
-  {"display/matrix/panel/count/y", &matrix::panel_count_y, 1, 8, REBOOT, "Number of panels on the y axis"},
+  {"display/matrix/panel/count/y", &matrix::panel_count_y, 1, 1, REBOOT, "Number of panels on the y axis, only 1 is supported"},
   {"display/matrix/pins/r1", &matrix::pins_r1, PIN_MIN, PIN_MAX, REBOOT, "HUB75 R1 pin"},
   {"display/matrix/pins/g1", &matrix::pins_g1, PIN_MIN, PIN_MAX, REBOOT, "HUB75 G1 pin"},
   {"display/matrix/pins/b1", &matrix::pins_b1, PIN_MIN, PIN_MAX, REBOOT, "HUB75 B1 pin"},
@@ -122,6 +122,15 @@ std::string Setting::toString() const {
       value);
 }
 
+bool Setting::accepts(int32_t number) const {
+  if (std::holds_alternative<bool*>(value)) return true;
+  // Strings are only limited in length, 0 means unlimited
+  if (std::holds_alternative<std::string*>(value)) {
+    return max == 0 || number <= max;
+  }
+  return number >= min && number <= max;
+}
+
 std::string Setting::range() const {
   if (std::holds_alternative<bool*>(value)) return "on/off";
   if (std::holds_alternative<std::string*>(value)) {
@@ -134,7 +143,7 @@ std::string Setting::range() const {
 bool Setting::parse(const std::string& input, std::string& error) {
   if (auto* text = std::get_if<std::string*>(&value)) {
     std::string result = input == "-" ? "" : input;
-    if (max > 0 && result.length() > static_cast<size_t>(max)) {
+    if (!accepts(result.length())) {
       error = "Too long, at most " + std::to_string(max) + " characters";
       return false;
     }
@@ -163,7 +172,7 @@ bool Setting::parse(const std::string& input, std::string& error) {
     error = "Expected a number";
     return false;
   }
-  if (number < min || number > max) {
+  if (!accepts(number)) {
     error = "Out of range, allowed is " + range();
     return false;
   }

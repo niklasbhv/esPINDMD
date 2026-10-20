@@ -16,14 +16,18 @@
 
 #include "Matrix.hpp"
 
+#include "application/Clock.hpp"
+#include "display/Logo.hpp"
+
 namespace display::matrix {
 
 void Matrix::begin() {
-  Serial.println("Matrix: Initizalizing the matrix component...");
+  Serial.println("Matrix: Initializing the matrix component...");
 
   panel_width = panel_res_x * panel_count_x;
   panel_height = panel_res_y * panel_count_y;
-  panel_chain = panel_count_x + panel_count_y - 1;
+  // Only a single row of panels is supported
+  panel_chain = panel_count_x * panel_count_y;
 
   // module configuration
   HUB75_I2S_CFG mxconfig(panel_res_x,  // module width
@@ -52,7 +56,7 @@ void Matrix::begin() {
   dma_display->begin();
   dma_display->setBrightness8(power ? brightness : 0);
   dma_display->clearScreen();
-  Serial.println("Matrix: Initizalized the matrix component!");
+  Serial.println("Matrix: Initialized the matrix component!");
 }
 
 void Matrix::clearScreen() { dma_display->clearScreen(); }
@@ -93,11 +97,15 @@ void Matrix::setCenteredCursorPosition(const String &text) {
   dma_display->setCursor(x, y);
 }
 
+/**
+ * Shows the logo centered on the matrix, cut off on smaller matrices
+ */
 void Matrix::printLogo() {
-  for (int y = 0; y < panel_height; y++) {
-    for (int x = 0; x < panel_width; x++) {
-      uint16_t color = esPINDMD_logo[y * panel_width + x];
-      Matrix::drawPixel(x, y, color);
+  int16_t offset_x = (static_cast<int16_t>(panel_width) - LOGO_WIDTH) / 2;
+  int16_t offset_y = (static_cast<int16_t>(panel_height) - LOGO_HEIGHT) / 2;
+  for (int16_t y = 0; y < LOGO_HEIGHT; y++) {
+    for (int16_t x = 0; x < LOGO_WIDTH; x++) {
+      drawPixel(offset_x + x, offset_y + y, esPINDMD_logo[y * LOGO_WIDTH + x]);
     }
   }
 }
@@ -106,10 +114,7 @@ void Matrix::printLogo() {
  * Shows the progress of a firmware update as text and progress bar
  */
 void Matrix::printUpdateProgress(uint8_t percent) {
-  uint16_t colour =
-      dma_display->color565(application::clock::colour_r,
-                            application::clock::colour_g,
-                            application::clock::colour_b);
+  uint16_t colour = textColour();
   String text = "Updating " + String(percent) + "%";
 
   dma_display->clearScreen();
@@ -143,13 +148,11 @@ void Matrix::printLines(std::initializer_list<String> lines) {
   dma_display->setFont(nullptr);
   dma_display->setTextSize(1);
   dma_display->setTextWrap(false);
-  dma_display->setTextColor(
-      dma_display->color565(application::clock::colour_r,
-                            application::clock::colour_g,
-                            application::clock::colour_b));
+  dma_display->setTextColor(textColour());
 
-  int16_t y = (panel_height - static_cast<int16_t>(lines.size()) * LINE_HEIGHT) / 2;
-  for (const String& line : lines) {
+  int16_t y =
+      (panel_height - static_cast<int16_t>(lines.size()) * LINE_HEIGHT) / 2;
+  for (const String &line : lines) {
     int16_t x1, y1;
     uint16_t w, h;
     dma_display->getTextBounds(line, 0, 0, &x1, &y1, &w, &h);
@@ -165,105 +168,61 @@ void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   dma_display->drawPixel(x, y, colour);
 }
 
-void Matrix::println(const char *text, bool clear, uint16_t cursor_x,
-                     uint16_t cursor_y) {
-  if (clear) {
-    dma_display->clearScreen();
-    dma_display->setCursor(cursor_x, cursor_y);
-  }
-  dma_display->println(text);
+/**
+ * Colour used for all text, configured by the clock colour
+ */
+uint16_t Matrix::textColour() {
+  return dma_display->color565(application::clock::colour_r,
+                               application::clock::colour_g,
+                               application::clock::colour_b);
 }
 
-void Matrix::printClock(String time) {
+/**
+ * Shows a single text centered on the matrix using the given font
+ */
+void Matrix::printCentered(const String &text, const GFXfont *font) {
   dma_display->clearScreen();
-  dma_display->setFont(&FreeMonoBold18pt7b);
-  setCenteredCursorPosition(time);
-  dma_display->setTextColor(dma_display->color565(application::clock::colour_r, application::clock::colour_g, application::clock::colour_b));
+  dma_display->setFont(font);
   dma_display->setTextSize(1);
-  dma_display->println(time);
+  dma_display->setTextColor(textColour());
+  setCenteredCursorPosition(text);
+  dma_display->print(text);
 }
 
-void Matrix::printDate(String date) {
-  dma_display->clearScreen();
-  dma_display->setFont(&FreeMonoBold9pt7b);
-  setCenteredCursorPosition(date);
-  dma_display->setTextColor(dma_display->color565(application::clock::colour_r, application::clock::colour_g, application::clock::colour_b));
-  dma_display->setTextSize(1);
-  dma_display->println(date);
+void Matrix::printClock(const String &time) {
+  printCentered(time, &FreeMonoBold18pt7b);
 }
 
+void Matrix::printDate(const String &date) {
+  printCentered(date, &FreeMonoBold9pt7b);
+}
+
+/**
+ * Callback of the AnimatedGIF library drawing a single line of a frame
+ */
 void Matrix::drawGif(GIFDRAW *pDraw) {
-  uint8_t *s;
-  uint16_t *d, *usPalette, usTemp[320];
-  int x, y, iWidth;
+  int16_t y = pDraw->iY + pDraw->y;
+  if (y >= panel_height) return;
 
-  iWidth = pDraw->iWidth;
-  if (iWidth > panel_width) iWidth = panel_width;
+  // Clip lines wider than the matrix
+  int16_t width = std::min<int16_t>(pDraw->iWidth, panel_width - pDraw->iX);
+  uint8_t *pixels = pDraw->pPixels;
+  uint16_t *palette = pDraw->pPalette;
 
-  usPalette = pDraw->pPalette;
-  y = pDraw->iY + pDraw->y;  // current line
-
-  s = pDraw->pPixels;
-  if (pDraw->ucDisposalMethod == 2)  // restore to background color
-  {
-    for (x = 0; x < iWidth; x++) {
-      if (s[x] == pDraw->ucTransparent) s[x] = pDraw->ucBackground;
+  // Restore transparent pixels to the background colour
+  if (pDraw->ucDisposalMethod == 2) {
+    for (int16_t x = 0; x < width; x++) {
+      if (pixels[x] == pDraw->ucTransparent) pixels[x] = pDraw->ucBackground;
     }
     pDraw->ucHasTransparency = 0;
   }
-  // Apply the new pixels to the main image
-  if (pDraw->ucHasTransparency)  // if transparency used
-  {
-    uint8_t *pEnd, c, ucTransparent = pDraw->ucTransparent;
-    int x, iCount;
-    pEnd = s + pDraw->iWidth;
-    x = 0;
-    iCount = 0;  // count non-transparent pixels
-    while (x < pDraw->iWidth) {
-      c = ucTransparent - 1;
-      d = usTemp;
-      while (c != ucTransparent && s < pEnd) {
-        c = *s++;
-        if (c == ucTransparent)  // done, stop
-        {
-          s--;  // back up to treat it like transparent
-        } else  // opaque
-        {
-          *d++ = usPalette[c];
-          iCount++;
-        }
-      }  // while looking for opaque pixels
-      if (iCount)  // any opaque pixels?
-      {
-        for (int xOffset = 0; xOffset < iCount; xOffset++) {
-          drawPixel(x + xOffset, y,
-                    usTemp[xOffset]);  // 565 Color Format
-        }
-        x += iCount;
-        iCount = 0;
-      }
-      // no, look for a run of transparent pixels
-      c = ucTransparent;
-      while (c == ucTransparent && s < pEnd) {
-        c = *s++;
-        if (c == ucTransparent)
-          iCount++;
-        else
-          s--;
-      }
-      if (iCount) {
-        x += iCount;  // skip these
-        iCount = 0;
-      }
+
+  for (int16_t x = 0; x < width; x++) {
+    // Transparent pixels keep the content of the previous frame
+    if (pDraw->ucHasTransparency && pixels[x] == pDraw->ucTransparent) {
+      continue;
     }
-  } else  // does not have transparency
-  {
-    s = pDraw->pPixels;
-    // Translate the 8-bit pixels through the RGB565 palette (already byte
-    // reversed)
-    for (x = 0; x < pDraw->iWidth; x++) {
-      drawPixel(x, y, usPalette[*s++]);  // color 565
-    }
+    drawPixel(pDraw->iX + x, y, palette[pixels[x]]);
   }
 }
 

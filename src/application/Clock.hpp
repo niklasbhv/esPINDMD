@@ -30,13 +30,16 @@ inline std::string ntp_server = "pool.ntp.org";
 inline std::string ntp_timezone = "Europe/Berlin";
 inline uint8_t ntp_sync_timeout = 60;
 
+// Maximum time to wait for the first NTP sync on boot
+constexpr uint16_t INITIAL_SYNC_TIMEOUT_S = 30;
+
 class Clock {
  private:
   Timezone timezone;
 
  public:
   Clock();
-  String dateTime(String format);
+  String dateTime(const String& format);
 };
 
 }  // namespace application::clock

@@ -36,8 +36,7 @@ enum Flags : uint8_t {
   HIDDEN = 1 << 2,
 };
 
-using Value =
-    std::variant<bool*, uint8_t*, int8_t*, uint16_t*, std::string*>;
+using Value = std::variant<bool*, uint8_t*, int8_t*, uint16_t*, std::string*>;
 
 /**
  * A single setting of the device. The path corresponds to the location
@@ -62,6 +61,8 @@ struct Setting {
   std::string range() const;
   // Parses and validates the input, the value is only changed on success
   bool parse(const std::string& input, std::string& error);
+  // Checks if a number or the length of a string is within the limits
+  bool accepts(int32_t number) const;
 };
 
 // All settings of the device, in the order of the configuration file

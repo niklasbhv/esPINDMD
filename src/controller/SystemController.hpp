@@ -16,7 +16,7 @@
 
 #pragma once
 
-// #include "application/Clock.hpp"
+#include "application/Clock.hpp"
 #include "cli/Cli.hpp"
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
@@ -25,9 +25,10 @@
 #include "storage/Sd.hpp"
 #include "update/Ota.hpp"
 
-#define SHOW_APPLICATION_MS 5000
+// Time each application is shown
+constexpr uint32_t SHOW_APPLICATION_MS = 5000;
 // Time without further changes before the configuration gets saved
-#define SAVE_DELAY_MS 5000
+constexpr uint32_t SAVE_DELAY_MS = 5000;
 
 class SystemController {
  private:
@@ -44,16 +45,15 @@ class SystemController {
   bool _config_dirty = false;
   uint32_t _config_changed_at = 0;
 
-  void displayLogo();
-  bool displayGif(String& filename);
+  bool displayGif(const String& filename);
   void wait(uint32_t ms);
   bool keepRendering();
   void runUpdate();
+  void setupMqtt();
   void setupCli();
   bool healthy();
 
  public:
-  SystemController();
   void begin();
   void applicationLoop();
   void systemLoop();
