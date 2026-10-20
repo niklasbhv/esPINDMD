@@ -42,20 +42,21 @@
         "lat": 10,
         "oe": 9,
         "clk": 8
-      }
+      },
+      "brightness": 90
     }
   },
   "network": {
     "mqtt": {
       "enable": false,
       "server": "mqtt.example.org",
-      "port": 1833,
+      "port": 1883,
       "credentials": {
         "username": "",
         "password": ""
       },
       "client": {
-        "id": "esPINDMD-00:00:00:00:00:00"
+        "id": ""
       }
     },
     "wifi": {
@@ -72,5 +73,9 @@
         "cs": 45
       }
     }
+  },
+  "update": {
+    "url": "https://github.com/niklasbhv/esPINDMD/releases/latest/download/manifest.json",
+    "interval": 6
   }
 }
