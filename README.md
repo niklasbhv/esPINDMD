@@ -6,17 +6,14 @@ esPINDMD is a clock and GIF player combination for playing Pinball animations.
 
 ## Features
 
-As of now, not all of these features are implemented.
-
 esPINDMD supports the following features:
 
-- Support for ESP32 and ESP32-S3
+- Support for ESP32 and ESP32-S3 based boards
 - Easy to assemble and setup
 - Random or sequential GIF playback
-- Wi-Fi and Ethernet support
+- Wi-Fi support including support for a fully local setup
 - Support for MQTT including Home Assistant auto discovery
-- Support for over the air updates
-- Support for additional sensors via STEMMA QT / QWIC
+- Support for over the air updates compatible with Home Assistant
 
 ## Setup the development environment
 
