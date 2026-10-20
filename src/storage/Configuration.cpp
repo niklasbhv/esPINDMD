@@ -107,6 +107,10 @@ boolean Configuration::load() {
   get(doc["storage"]["sd"]["pins"]["clk"], storage::sd::pins_clk);
   get(doc["storage"]["sd"]["pins"]["cs"], storage::sd::pins_cs);
 
+  // Update configuration
+  get(doc["update"]["url"], update::ota::manifest_url);
+  get(doc["update"]["interval"], update::ota::check_interval);
+
   return true;
 }
 
@@ -174,6 +178,10 @@ boolean Configuration::save() {
   doc["storage"]["sd"]["pins"]["miso"] = storage::sd::pins_miso;
   doc["storage"]["sd"]["pins"]["clk"] = storage::sd::pins_clk;
   doc["storage"]["sd"]["pins"]["cs"] = storage::sd::pins_cs;
+
+  // Update configuration
+  doc["update"]["url"] = update::ota::manifest_url;
+  doc["update"]["interval"] = update::ota::check_interval;
 
   FsFile config_file;
   if (!storage::sd::Sd::openFileForWrite(CONFIG_TMP_FILE_PATH, config_file)) {

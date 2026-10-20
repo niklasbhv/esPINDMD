@@ -48,8 +48,10 @@ void SystemController::begin() {
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
   // setup MQTT if enabled
+  _ota.begin();
   if (network::mqtt::enable) {
-    _mqtt = std::make_unique<network::mqtt::Mqtt>(
+    network::mqtt::Handlers handlers;
+    handlers.on_light_command =
         [this](const network::mqtt::LightCommand& command) {
           if (command.brightness &&
               *command.brightness != display::matrix::brightness) {
@@ -61,11 +63,26 @@ void SystemController::begin() {
           if (command.on) {
             display::matrix::Matrix::setPower(*command.on);
           }
-        },
-        []() {
-          return network::mqtt::LightState{display::matrix::Matrix::isOn(),
-                                           display::matrix::brightness};
-        });
+        };
+    handlers.get_light_state = []() {
+      return network::mqtt::LightState{display::matrix::Matrix::isOn(),
+                                       display::matrix::brightness};
+    };
+    handlers.on_install = [this]() { _ota.requestInstall(); };
+    handlers.get_update_state = [this]() {
+      const update::ota::Release& latest = _ota.latest();
+      network::mqtt::UpdateState state;
+      state.installed_version = update::ota::Ota::installedVersion();
+      // Until a release is known the installed version is the latest one
+      state.latest_version =
+          _ota.checked() ? latest.version : state.installed_version;
+      state.release_url = latest.release_url;
+      state.release_summary = latest.release_summary;
+      state.in_progress = _ota.installing();
+      state.percentage = _ota.progress();
+      return state;
+    };
+    _mqtt = std::make_unique<network::mqtt::Mqtt>(std::move(handlers));
     _mqtt->begin();
   }
 
@@ -90,8 +107,8 @@ bool SystemController::displayGif(String& filename) {
   } else {
     display::matrix::Matrix::clearScreen();
     // Keep the system parts running between frames and stop playback
-    // as soon as the matrix gets turned off
-    while (display::matrix::Matrix::isOn() && _gif.playFrame(true, NULL)) {
+    // as soon as the matrix gets turned off or an update is requested
+    while (keepRendering() && _gif.playFrame(true, NULL)) {
       systemLoop();
     }
     _gif.close();
@@ -101,28 +118,42 @@ bool SystemController::displayGif(String& filename) {
 
 /**
  * Function used to wait while keeping the system parts running,
- * returns early if the matrix gets turned off
+ * returns early if the rendering should stop
  */
 void SystemController::wait(uint32_t ms) {
   uint32_t start = millis();
-  while (millis() - start < ms && display::matrix::Matrix::isOn()) {
+  while (millis() - start < ms && keepRendering()) {
     systemLoop();
     delay(10);
   }
 }
 
 /**
+ * Function used to check if the applications should keep rendering,
+ * they stop if the matrix is turned off or an update is requested
+ */
+bool SystemController::keepRendering() {
+  return display::matrix::Matrix::isOn() && !_ota.installRequested();
+}
+
+/**
  * Function used for running the application parts of the device
  */
 void SystemController::applicationLoop() {
-  if (!display::matrix::Matrix::isOn()) return;
+  // Installed here instead of the system loop, as that one also runs
+  // nested inside the applications
+  if (_ota.installRequested()) {
+    runUpdate();
+    return;
+  }
+  if (!keepRendering()) return;
 
   display::matrix::Matrix::printClock(_clock->dateTime("H:i"));
   wait(SHOW_APPLICATION_MS);
-  if (!display::matrix::Matrix::isOn()) return;
+  if (!keepRendering()) return;
   display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
   wait(SHOW_APPLICATION_MS);
-  if (!display::matrix::Matrix::isOn()) return;
+  if (!keepRendering()) return;
   String filename;
   if (!_sd->next(filename)) {
     Serial.println(
@@ -142,4 +173,53 @@ void SystemController::systemLoop() {
     _config_dirty = false;
     storage::configuration::Configuration::save();
   }
+
+  // A new firmware is confirmed once it reached the network,
+  // otherwise it gets rolled back after a timeout
+  if (update::ota::Ota::pendingConfirm() && healthy()) {
+    update::ota::Ota::confirm();
+  }
+  if (_ota.loop() && _mqtt) _mqtt->publishUpdateState();
+}
+
+/**
+ * Function used to check if the device is fully operational
+ */
+bool SystemController::healthy() {
+  if (WiFi.status() != WL_CONNECTED) return false;
+  return !_mqtt || _mqtt->connected();
+}
+
+/**
+ * Function used to install a requested update, runs from the main loop
+ * after the applications stopped rendering. Restarts on success.
+ */
+void SystemController::runUpdate() {
+  // Write pending configuration changes, they would be lost on restart
+  if (_config_dirty) {
+    _config_dirty = false;
+    storage::configuration::Configuration::save();
+  }
+
+  int8_t last_published = -1;
+  display::matrix::Matrix::printUpdateProgress(0);
+  if (_mqtt) _mqtt->publishUpdateState();
+
+  bool ok = _ota.install([this, &last_published](uint8_t percent) {
+    display::matrix::Matrix::printUpdateProgress(percent);
+    // Throttle the MQTT updates, publishing also keeps the connection alive
+    if (_mqtt && percent - last_published >= 5) {
+      last_published = percent;
+      _mqtt->publishUpdateState();
+    }
+  });
+
+  if (ok) {
+    Serial.println("SystemController: Restarting into the new firmware...");
+    delay(500);
+    ESP.restart();
+  }
+  // Report the failed installation and resume the applications
+  if (_mqtt) _mqtt->publishUpdateState();
+  display::matrix::Matrix::clearScreen();
 }

@@ -24,6 +24,7 @@
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
+#include "update/Ota.hpp"
 
 namespace storage::configuration {
 

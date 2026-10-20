@@ -23,6 +23,7 @@
 #include "network/Wifi.hpp"
 #include "storage/Configuration.hpp"
 #include "storage/Sd.hpp"
+#include "update/Ota.hpp"
 
 #define SHOW_APPLICATION_MS 5000
 // Time without further changes before the configuration gets saved
@@ -37,6 +38,7 @@ class SystemController {
   std::unique_ptr<application::clock::Clock> _clock;
   std::unique_ptr<network::mqtt::Mqtt> _mqtt;
   std::unique_ptr<Cli> _cli;
+  update::ota::Ota _ota;
   AnimatedGIF _gif;
   // Pending configuration changes
   bool _config_dirty = false;
@@ -45,6 +47,9 @@ class SystemController {
   void displayLogo();
   bool displayGif(String& filename);
   void wait(uint32_t ms);
+  bool keepRendering();
+  void runUpdate();
+  bool healthy();
 
  public:
   SystemController();

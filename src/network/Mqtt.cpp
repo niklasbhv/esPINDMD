@@ -16,18 +16,17 @@
 
 #include "Mqtt.hpp"
 
+#include "update/Version.hpp"
+
 namespace network::mqtt {
 
 /**
  * Constructor of the Mqtt class
  *
- * @param on_command Invoked whenever a command for the matrix is received
- * @param get_state Used to retrieve the current state of the matrix
+ * @param handlers Functions used to apply commands and retrieve states
  */
-Mqtt::Mqtt(CommandHandler on_command, StateProvider get_state)
-    : _mqtt_client(_wifi_client),
-      _on_command(std::move(on_command)),
-      _get_state(std::move(get_state)) {}
+Mqtt::Mqtt(Handlers handlers)
+    : _mqtt_client(_wifi_client), _handlers(std::move(handlers)) {}
 
 /**
  * Function used to set up the client and topics, needs to be called
@@ -43,10 +42,10 @@ void Mqtt::begin() {
 
   std::string base = "espindmd/" + _node_id;
   _availability_topic = base + "/availability";
-  _state_topic = base + "/matrix/state";
-  _command_topic = base + "/matrix/set";
-  _discovery_topic =
-      std::string(DISCOVERY_PREFIX) + "/light/" + _node_id + "/matrix/config";
+  _light_state_topic = base + "/matrix/state";
+  _light_command_topic = base + "/matrix/set";
+  _update_state_topic = base + "/update/state";
+  _update_command_topic = base + "/update/install";
 
   _mqtt_client.setServer(server.c_str(), port);
   _mqtt_client.setBufferSize(BUFFER_SIZE);
@@ -60,8 +59,8 @@ void Mqtt::begin() {
 
 /**
  * Function used to connect to the broker. On success the discovery,
- * availability and current state are published and the command topic
- * is subscribed.
+ * availability and current states are published and the command topics
+ * are subscribed.
  */
 bool Mqtt::connect() {
   if (WiFi.status() != WL_CONNECTED) return false;
@@ -80,8 +79,10 @@ bool Mqtt::connect() {
 
   publishDiscovery();
   _mqtt_client.publish(_availability_topic.c_str(), "online", true);
-  _mqtt_client.subscribe(_command_topic.c_str());
-  publishState();
+  _mqtt_client.subscribe(_light_command_topic.c_str());
+  _mqtt_client.subscribe(_update_command_topic.c_str());
+  publishLightState();
+  publishUpdateState();
   return true;
 }
 
@@ -103,42 +104,71 @@ void Mqtt::loop() {
 }
 
 /**
- * Function used to publish the matrix as a Home Assistant light,
- * see https://www.home-assistant.io/integrations/light.mqtt/#json-schema
+ * Function used to add the device information shared by all entities
  */
-void Mqtt::publishDiscovery() {
-  JsonDocument doc;
-  // Device information
+void Mqtt::addDevice(JsonDocument& doc) {
   JsonObject device = doc["device"].to<JsonObject>();
   device["identifiers"].add(_node_id);
   device["name"] = "esPINDMD";
   device["model"] = "esPINDMD";
-  device["sw_version"] = "0.0.0";
+  device["model_id"] = ESPINDMD_ENV;
+  device["sw_version"] = ESPINDMD_VERSION;
+}
 
-  // Matrix capabilities
-  doc["name"] = "Matrix";
-  doc["unique_id"] = _node_id + "_matrix";
-  doc["schema"] = "json";
-  doc["availability_topic"] = _availability_topic;
-  doc["command_topic"] = _command_topic;
-  doc["state_topic"] = _state_topic;
-  doc["supported_color_modes"].add("brightness");
-
+/**
+ * Function used to publish the Home Assistant discovery of all entities
+ * see https://www.home-assistant.io/integrations/light.mqtt/#json-schema
+ * and https://www.home-assistant.io/integrations/update.mqtt/
+ */
+void Mqtt::publishDiscovery() {
   std::string payload;
-  serializeJson(doc, payload);
+  std::string prefix = std::string(DISCOVERY_PREFIX);
+
+  // Matrix as light with on/off and brightness
+  JsonDocument light;
+  addDevice(light);
+  light["name"] = "Matrix";
+  light["unique_id"] = _node_id + "_matrix";
+  light["schema"] = "json";
+  light["availability_topic"] = _availability_topic;
+  light["command_topic"] = _light_command_topic;
+  light["state_topic"] = _light_state_topic;
+  light["supported_color_modes"].add("brightness");
+  serializeJson(light, payload);
   // Retained, so Home Assistant picks up the device after a restart
-  if (!_mqtt_client.publish(_discovery_topic.c_str(), payload.c_str(), true)) {
-    Serial.println("MQTT: Failed to publish discovery!");
+  if (!_mqtt_client.publish(
+          (prefix + "/light/" + _node_id + "/matrix/config").c_str(),
+          payload.c_str(), true)) {
+    Serial.println("MQTT: Failed to publish light discovery!");
+  }
+
+  // Firmware as update entity
+  JsonDocument update;
+  addDevice(update);
+  update["name"] = "Firmware";
+  update["unique_id"] = _node_id + "_firmware";
+  update["device_class"] = "firmware";
+  update["entity_category"] = "config";
+  update["availability_topic"] = _availability_topic;
+  update["state_topic"] = _update_state_topic;
+  update["command_topic"] = _update_command_topic;
+  update["payload_install"] = PAYLOAD_INSTALL;
+  payload.clear();
+  serializeJson(update, payload);
+  if (!_mqtt_client.publish(
+          (prefix + "/update/" + _node_id + "/firmware/config").c_str(),
+          payload.c_str(), true)) {
+    Serial.println("MQTT: Failed to publish update discovery!");
   }
 }
 
 /**
  * Function used to publish the current state of the matrix
  */
-void Mqtt::publishState() {
+void Mqtt::publishLightState() {
   if (!_mqtt_client.connected()) return;
 
-  LightState state = _get_state();
+  LightState state = _handlers.get_light_state();
   JsonDocument doc;
   doc["state"] = state.on ? "ON" : "OFF";
   doc["brightness"] = state.brightness;
@@ -146,16 +176,54 @@ void Mqtt::publishState() {
 
   std::string payload;
   serializeJson(doc, payload);
-  _mqtt_client.publish(_state_topic.c_str(), payload.c_str(), true);
+  _mqtt_client.publish(_light_state_topic.c_str(), payload.c_str(), true);
 }
 
 /**
- * Callback invoked whenever a message gets published to a subscribed topic.
- * Expects payloads like {"state": "ON", "brightness": 128}
+ * Function used to publish the current state of the firmware update
+ */
+void Mqtt::publishUpdateState() {
+  if (!_mqtt_client.connected()) return;
+
+  UpdateState state = _handlers.get_update_state();
+  JsonDocument doc;
+  doc["installed_version"] = state.installed_version;
+  doc["latest_version"] = state.latest_version;
+  if (!state.release_url.empty()) doc["release_url"] = state.release_url;
+  if (!state.release_summary.empty()) {
+    doc["release_summary"] = state.release_summary;
+  }
+  doc["in_progress"] = state.in_progress;
+  if (state.percentage >= 0) {
+    doc["update_percentage"] = state.percentage;
+  } else {
+    doc["update_percentage"] = nullptr;
+  }
+
+  std::string payload;
+  serializeJson(doc, payload);
+  _mqtt_client.publish(_update_state_topic.c_str(), payload.c_str(), true);
+}
+
+/**
+ * Callback invoked whenever a message gets published to a subscribed topic
  */
 void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
-  if (_command_topic != topic) return;
+  if (_light_command_topic == topic) {
+    onLightCommand(payload, length);
+  } else if (_update_command_topic == topic) {
+    if (length == strlen(PAYLOAD_INSTALL) &&
+        memcmp(payload, PAYLOAD_INSTALL, length) == 0) {
+      _handlers.on_install();
+    }
+  }
+}
 
+/**
+ * Function used to handle light commands.
+ * Expects payloads like {"state": "ON", "brightness": 128}
+ */
+void Mqtt::onLightCommand(uint8_t* payload, size_t length) {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, payload, length);
   if (err) {
@@ -170,9 +238,9 @@ void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
   if (doc["brightness"].is<uint8_t>()) {
     command.brightness = doc["brightness"].as<uint8_t>();
   }
-  _on_command(command);
+  _handlers.on_light_command(command);
   // Confirm the new state, Home Assistant waits for it
-  publishState();
+  publishLightState();
 }
 
 /**

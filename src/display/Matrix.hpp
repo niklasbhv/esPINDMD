@@ -73,6 +73,7 @@ class Matrix {
   static void printClock(String time);
   static void printDate(String date);
   static void printLogo();
+  static void printUpdateProgress(uint8_t percent);
   static void drawPixel(int16_t x, int16_t y, uint16_t colour);
   static void drawGif(GIFDRAW* pDraw);
 

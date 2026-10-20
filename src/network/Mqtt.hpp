@@ -39,6 +39,8 @@ constexpr const char* DISCOVERY_PREFIX = "homeassistant";
 constexpr uint32_t RECONNECT_INTERVAL_MS = 5000;
 // Discovery payloads exceed the default PubSubClient buffer of 256 bytes
 constexpr size_t BUFFER_SIZE = 1024;
+// Payload Home Assistant sends to start an update
+constexpr const char* PAYLOAD_INSTALL = "install";
 
 /**
  * State of the matrix as exposed to Home Assistant
@@ -57,37 +59,61 @@ struct LightCommand {
   std::optional<uint8_t> brightness;
 };
 
-using CommandHandler = std::function<void(const LightCommand&)>;
-using StateProvider = std::function<LightState()>;
+/**
+ * State of the firmware update as exposed to Home Assistant
+ */
+struct UpdateState {
+  std::string installed_version;
+  std::string latest_version;
+  std::string release_url;
+  std::string release_summary;
+  bool in_progress;
+  // Progress in percent, negative if no update is in progress
+  int8_t percentage;
+};
+
+/**
+ * Functions used to connect the MQTT component to the rest of the system
+ */
+struct Handlers {
+  std::function<void(const LightCommand&)> on_light_command;
+  std::function<LightState()> get_light_state;
+  std::function<void()> on_install;
+  std::function<UpdateState()> get_update_state;
+};
 
 /**
  * MQTT component exposing the matrix as a Home Assistant light
- * (JSON schema) with on/off and brightness support.
+ * (JSON schema) with on/off and brightness support and the firmware
+ * as a Home Assistant update entity.
  */
 class Mqtt {
  private:
   WiFiClient _wifi_client;
   PubSubClient _mqtt_client;
-  CommandHandler _on_command;
-  StateProvider _get_state;
+  Handlers _handlers;
   uint32_t _last_reconnect_attempt = 0;
 
   std::string _client_id;
   std::string _node_id;
   std::string _availability_topic;
-  std::string _state_topic;
-  std::string _command_topic;
-  std::string _discovery_topic;
+  std::string _light_state_topic;
+  std::string _light_command_topic;
+  std::string _update_state_topic;
+  std::string _update_command_topic;
 
   bool connect();
+  void addDevice(JsonDocument& doc);
   void publishDiscovery();
   void onMessage(char* topic, uint8_t* payload, size_t length);
+  void onLightCommand(uint8_t* payload, size_t length);
 
  public:
-  Mqtt(CommandHandler on_command, StateProvider get_state);
+  explicit Mqtt(Handlers handlers);
   void begin();
   void loop();
-  void publishState();
+  void publishLightState();
+  void publishUpdateState();
   bool connected();
 };
 

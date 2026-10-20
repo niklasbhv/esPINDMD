@@ -102,6 +102,35 @@ void Matrix::printLogo() {
   }
 }
 
+/**
+ * Shows the progress of a firmware update as text and progress bar
+ */
+void Matrix::printUpdateProgress(uint8_t percent) {
+  uint16_t colour =
+      dma_display->color565(application::clock::colour_r,
+                            application::clock::colour_g,
+                            application::clock::colour_b);
+  String text = "Updating " + String(percent) + "%";
+
+  dma_display->clearScreen();
+  dma_display->setFont(nullptr);
+  dma_display->setTextSize(1);
+  dma_display->setTextColor(colour);
+  int16_t x1, y1;
+  uint16_t w, h;
+  dma_display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  dma_display->setCursor((panel_width - w) / 2, panel_height / 2 - h - 1);
+  dma_display->print(text);
+
+  // Progress bar below the text
+  int16_t bar_x = 4;
+  int16_t bar_y = panel_height / 2 + 2;
+  int16_t bar_w = panel_width - 2 * bar_x;
+  dma_display->drawRect(bar_x, bar_y, bar_w, 6, colour);
+  dma_display->fillRect(bar_x + 1, bar_y + 1, (bar_w - 2) * percent / 100, 4,
+                        colour);
+}
+
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   dma_display->drawPixel(x, y, colour);
 }
