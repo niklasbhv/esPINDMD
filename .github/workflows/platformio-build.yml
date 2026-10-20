@@ -17,10 +17,8 @@ jobs:
       matrix:
         environment:
           - esp32dev
-          - esp32-s2-saola-1
           - esp32-s3-devkitm-1
           - sparkfun_esp32_iot_redboard
-          - adafruit_metro_esp32s2
           - adafruit_metro_esp32s3
 
     steps:
