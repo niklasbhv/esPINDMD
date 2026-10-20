@@ -18,6 +18,7 @@
 
 #include <WiFiManager.h>
 
+#include <functional>
 #include <string>
 
 namespace network::wifi {
@@ -25,13 +26,24 @@ namespace network::wifi {
 inline std::string ssid = "";
 inline std::string password = "";
 
+// Access point opened by the setup portal if no network is configured
+constexpr const char* AP_SSID = "esPINDMD";
+constexpr const char* AP_PASSWORD = "pinball12345";
+// Time after which the setup portal closes and the device starts offline
+constexpr uint16_t PORTAL_TIMEOUT_S = 180;
+
+// Invoked once the setup portal is opened, e.g. to show the access point
+using PortalCallback = std::function<void()>;
+
 class Wifi {
  private:
   WiFiManager _wm;
+  bool _portal_opened = false;
 
  public:
-  Wifi();
+  explicit Wifi(PortalCallback on_portal = nullptr);
   void reset();
+  bool portalOpened() const;
 };
 
 }  // namespace network::wifi

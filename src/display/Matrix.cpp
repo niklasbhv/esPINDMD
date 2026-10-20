@@ -131,6 +131,36 @@ void Matrix::printUpdateProgress(uint8_t percent) {
                         colour);
 }
 
+/**
+ * Shows up to four lines of text in the small default font, each line is
+ * centered horizontally and the block is centered vertically
+ */
+void Matrix::printLines(std::initializer_list<String> lines) {
+  // Height of the default font
+  constexpr int16_t LINE_HEIGHT = 8;
+
+  dma_display->clearScreen();
+  dma_display->setFont(nullptr);
+  dma_display->setTextSize(1);
+  dma_display->setTextWrap(false);
+  dma_display->setTextColor(
+      dma_display->color565(application::clock::colour_r,
+                            application::clock::colour_g,
+                            application::clock::colour_b));
+
+  int16_t y = (panel_height - static_cast<int16_t>(lines.size()) * LINE_HEIGHT) / 2;
+  for (const String& line : lines) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    dma_display->getTextBounds(line, 0, 0, &x1, &y1, &w, &h);
+    // Lines that are too wide start at the left edge and get cut off
+    int16_t x = w < panel_width ? (panel_width - w) / 2 : 0;
+    dma_display->setCursor(x, y);
+    dma_display->print(line);
+    y += LINE_HEIGHT;
+  }
+}
+
 void Matrix::drawPixel(int16_t x, int16_t y, uint16_t colour) {
   dma_display->drawPixel(x, y, colour);
 }

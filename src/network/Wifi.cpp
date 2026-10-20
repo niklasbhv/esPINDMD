@@ -18,18 +18,32 @@
 
 namespace network::wifi {
 
-Wifi::Wifi() {
+/**
+ * Constructor of the Wifi class, connects to the stored network or opens
+ * the setup portal if that fails. Blocks until connected or the portal
+ * timed out.
+ *
+ * @param on_portal Invoked once the setup portal is opened
+ */
+Wifi::Wifi(PortalCallback on_portal) {
   Serial.println("Wi-Fi: Initializing the Wi-Fi component...");
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
   WiFi.setHostname("esPINDMD");
   // set dark theme
   _wm.setClass("invert");
-  // auto close configportal three minutes
-  _wm.setConfigPortalTimeout(180);
+  // auto close the setup portal after the timeout
+  _wm.setConfigPortalTimeout(PORTAL_TIMEOUT_S);
+  _wm.setAPCallback([this, on_portal](WiFiManager*) {
+    _portal_opened = true;
+    Serial.printf("Wi-Fi: Opened the setup portal, connect to %s with "
+                  "password %s and open http://%s\n",
+                  AP_SSID, AP_PASSWORD, WiFi.softAPIP().toString().c_str());
+    if (on_portal) on_portal();
+  });
   // create a Wi-Fi AP
   bool res;
-  res = _wm.autoConnect("esPINDMD", "pinball12345");
+  res = _wm.autoConnect(AP_SSID, AP_PASSWORD);
   if (!res) {
     Serial.println("Wi-Fi: Failed to connect or hit timeout");
   } else {
@@ -38,5 +52,7 @@ Wifi::Wifi() {
   Serial.println("Wi-Fi: Initialized the Wi-Fi component!");
 }
 void Wifi::reset() { _wm.resetSettings(); }
+
+bool Wifi::portalOpened() const { return _portal_opened; }
 
 }  // namespace network::wifi

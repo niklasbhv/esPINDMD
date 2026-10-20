@@ -41,9 +41,17 @@ void SystemController::begin() {
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
   // setup the Wi-Fi configuration
-  _wifi = std::make_unique<network::wifi::Wifi>();
-  if (WiFi.status() == WL_CONNECTED) {
-    // display::matrix::Matrix::println(WiFi.localIP().toString().c_str());
+  _wifi = std::make_unique<network::wifi::Wifi>([]() {
+    // Show how to reach the setup portal while it is open
+    display::matrix::Matrix::printLines(
+        {"Wi-Fi Setup", String("SSID: ") + network::wifi::AP_SSID,
+         String("Pass: ") + network::wifi::AP_PASSWORD,
+         WiFi.softAPIP().toString()});
+  });
+  // Restore the boot screen for the rest of the startup
+  if (_wifi->portalOpened()) {
+    display::matrix::Matrix::clearScreen();
+    display::matrix::Matrix::printLogo();
   }
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
