@@ -34,29 +34,13 @@ namespace storage::configuration {
 #define CONFIG_TMP_FILE_PATH "/config.json.tmp"
 
 /**
- * Helper function used to retrieve values of the correct type from a JSON
- * We do not care, if the retreival fails as every value has a default
- */
-template <typename V, typename T>
-void get(const V& value, T& out) {
-  JsonVariantConst v = value;
-  if (v.is<T>()) {
-    out = v.as<T>();
-  }
-}
-
-/**
  * The configuration class is used for reading
  * and writing the configuration from the SD-Card.
  *
- * If no configuration is found, a new default one
- * is generated.
+ * The stored values are described in Settings.hpp, values missing in
+ * the file keep their defaults.
  */
 class Configuration {
- private:
-  static void loadWifiPassword();
-  static void loadMqttPassword();
-
  public:
   static boolean load();
   static boolean save();

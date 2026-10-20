@@ -16,11 +16,47 @@
 
 #include "Configuration.hpp"
 
+#include "Settings.hpp"
+
 namespace storage::configuration {
 
-void loadWifiPassword() {}
+/**
+ * Function used to look up the value of a setting in the JSON document,
+ * returns a null variant if any part of the path is missing
+ */
+static JsonVariantConst find(const JsonDocument& doc, const char* path) {
+  JsonVariantConst node = doc.as<JsonVariantConst>();
+  std::string segment;
+  for (const char* c = path;; c++) {
+    if (*c == '/' || *c == '\0') {
+      node = node[segment];
+      segment.clear();
+      if (*c == '\0' || node.isNull()) return node;
+    } else {
+      segment += *c;
+    }
+  }
+}
 
-void loadMqttPassword() {}
+/**
+ * Function used to create the location of a setting in the JSON document,
+ * missing objects on the path are created
+ */
+static JsonVariant create(JsonDocument& doc, const char* path) {
+  JsonObject node = doc.as<JsonObject>();
+  std::string segment;
+  for (const char* c = path; *c != '\0'; c++) {
+    if (*c == '/') {
+      JsonObject child = node[segment];
+      if (child.isNull()) child = node[segment].to<JsonObject>();
+      node = child;
+      segment.clear();
+    } else {
+      segment += *c;
+    }
+  }
+  return node[segment];
+}
 
 boolean Configuration::load() {
   Serial.println("Configuration: Loading configuration...");
@@ -46,142 +82,29 @@ boolean Configuration::load() {
     return false;
   }
 
-  // Clock values
-  get(doc["application"]["clock"]["colour"]["r"], application::clock::colour_r);
-  get(doc["application"]["clock"]["colour"]["g"], application::clock::colour_g);
-  get(doc["application"]["clock"]["colour"]["b"], application::clock::colour_b);
-
-  get(doc["application"]["clock"]["ntp"]["server"],
-      application::clock::ntp_server);
-  get(doc["application"]["clock"]["ntp"]["timezone"],
-      application::clock::ntp_timezone);
-  get(doc["application"]["clock"]["ntp"]["sync"]["timeout"],
-      application::clock::ntp_sync_timeout);
-
-  // Display configuration
-  // Matrix configuration
-
-  get(doc["display"]["matrix"]["panel"]["resolution"]["x"],
-      display::matrix::panel_res_x);
-  get(doc["display"]["matrix"]["panel"]["resolution"]["y"],
-      display::matrix::panel_res_y);
-  get(doc["display"]["matrix"]["panel"]["count"]["x"],
-      display::matrix::panel_count_x);
-  get(doc["display"]["matrix"]["panel"]["count"]["y"],
-      display::matrix::panel_count_y);
-
-  get(doc["display"]["matrix"]["pins"]["r1"], display::matrix::pins_r1);
-  get(doc["display"]["matrix"]["pins"]["g1"], display::matrix::pins_g1);
-  get(doc["display"]["matrix"]["pins"]["b1"], display::matrix::pins_b1);
-
-  get(doc["display"]["matrix"]["pins"]["r2"], display::matrix::pins_r2);
-  get(doc["display"]["matrix"]["pins"]["g2"], display::matrix::pins_g2);
-  get(doc["display"]["matrix"]["pins"]["b2"], display::matrix::pins_b2);
-
-  get(doc["display"]["matrix"]["pins"]["a"], display::matrix::pins_a);
-  get(doc["display"]["matrix"]["pins"]["b"], display::matrix::pins_b);
-  get(doc["display"]["matrix"]["pins"]["c"], display::matrix::pins_c);
-  get(doc["display"]["matrix"]["pins"]["d"], display::matrix::pins_d);
-  get(doc["display"]["matrix"]["pins"]["e"], display::matrix::pins_e);
-
-  get(doc["display"]["matrix"]["pins"]["lat"], display::matrix::pins_lat);
-  get(doc["display"]["matrix"]["pins"]["oe"], display::matrix::pins_oe);
-  get(doc["display"]["matrix"]["pins"]["clk"], display::matrix::pins_clk);
-  get(doc["display"]["matrix"]["brightness"], display::matrix::brightness);
-
-  // Mqtt values
-  get(doc["network"]["mqtt"]["enable"], network::mqtt::enable);
-  get(doc["network"]["mqtt"]["server"], network::mqtt::server);
-  get(doc["network"]["mqtt"]["port"], network::mqtt::port);
-
-  get(doc["network"]["mqtt"]["credentials"]["username"],
-      network::mqtt::username);
-  get(doc["network"]["mqtt"]["credentials"]["password"],
-      network::mqtt::password);
-  get(doc["network"]["mqtt"]["client"]["id"], network::mqtt::client_id);
-
-  // Storage configuration
-  // SD configuration
-  get(doc["storage"]["sd"]["pins"]["mosi"], storage::sd::pins_mosi);
-  get(doc["storage"]["sd"]["pins"]["miso"], storage::sd::pins_miso);
-  get(doc["storage"]["sd"]["pins"]["clk"], storage::sd::pins_clk);
-  get(doc["storage"]["sd"]["pins"]["cs"], storage::sd::pins_cs);
-
-  // Update configuration
-  get(doc["update"]["url"], update::ota::manifest_url);
-  get(doc["update"]["interval"], update::ota::check_interval);
-
+  // Missing values or values of the wrong type keep their defaults
+  for (size_t i = 0; i < settings::count; i++) {
+    const settings::Setting& setting = settings::all[i];
+    JsonVariantConst value = find(doc, setting.path);
+    std::visit(
+        [&value](auto* target) {
+          using T = std::remove_pointer_t<decltype(target)>;
+          if (value.is<T>()) *target = value.as<T>();
+        },
+        setting.value);
+  }
   return true;
 }
 
 boolean Configuration::save() {
   Serial.println("Configuration: Saving configuration...");
   JsonDocument doc;
-
-  // Application configuration
-  // Clock configuration
-  doc["application"]["clock"]["colour"]["r"] = application::clock::colour_r;
-  doc["application"]["clock"]["colour"]["g"] = application::clock::colour_g;
-  doc["application"]["clock"]["colour"]["b"] = application::clock::colour_b;
-  doc["application"]["clock"]["ntp"]["server"] = application::clock::ntp_server;
-  doc["application"]["clock"]["ntp"]["timezone"] =
-      application::clock::ntp_timezone;
-  doc["application"]["clock"]["ntp"]["sync"]["timeout"] =
-      application::clock::ntp_sync_timeout;
-
-  // Display configuration
-  // Matrix configuration
-  doc["display"]["matrix"]["panel"]["resolution"]["x"] =
-      display::matrix::panel_res_x;
-  doc["display"]["matrix"]["panel"]["resolution"]["y"] =
-      display::matrix::panel_res_y;
-  doc["display"]["matrix"]["panel"]["count"]["x"] =
-      display::matrix::panel_count_x;
-  doc["display"]["matrix"]["panel"]["count"]["y"] =
-      display::matrix::panel_count_y;
-
-  doc["display"]["matrix"]["pins"]["r1"] = display::matrix::pins_r1;
-  doc["display"]["matrix"]["pins"]["g1"] = display::matrix::pins_g1;
-  doc["display"]["matrix"]["pins"]["b1"] = display::matrix::pins_b1;
-
-  doc["display"]["matrix"]["pins"]["r2"] = display::matrix::pins_r2;
-  doc["display"]["matrix"]["pins"]["g2"] = display::matrix::pins_g2;
-  doc["display"]["matrix"]["pins"]["b2"] = display::matrix::pins_b2;
-
-  doc["display"]["matrix"]["pins"]["a"] = display::matrix::pins_a;
-  doc["display"]["matrix"]["pins"]["b"] = display::matrix::pins_b;
-  doc["display"]["matrix"]["pins"]["c"] = display::matrix::pins_c;
-  doc["display"]["matrix"]["pins"]["d"] = display::matrix::pins_d;
-  doc["display"]["matrix"]["pins"]["e"] = display::matrix::pins_e;
-
-  doc["display"]["matrix"]["pins"]["lat"] = display::matrix::pins_lat;
-  doc["display"]["matrix"]["pins"]["oe"] = display::matrix::pins_oe;
-  doc["display"]["matrix"]["pins"]["clk"] = display::matrix::pins_clk;
-  doc["display"]["matrix"]["brightness"] = display::matrix::brightness;
-
-  // Network configuration
-  // MQTT configuration
-  doc["network"]["mqtt"]["enable"] = network::mqtt::enable;
-  doc["network"]["mqtt"]["server"] = network::mqtt::server;
-  doc["network"]["mqtt"]["port"] = network::mqtt::port;
-  doc["network"]["mqtt"]["credentials"]["username"] = network::mqtt::username;
-  doc["network"]["mqtt"]["credentials"]["password"] = network::mqtt::password;
-  doc["network"]["mqtt"]["client"]["id"] = network::mqtt::client_id;
-
-  // Wi-Fi configuration
-  doc["network"]["wifi"]["ssid"] = network::wifi::ssid;
-  doc["network"]["wifi"]["password"] = network::wifi::password;
-
-  // Storage configuration
-  // SD confiugration
-  doc["storage"]["sd"]["pins"]["mosi"] = storage::sd::pins_mosi;
-  doc["storage"]["sd"]["pins"]["miso"] = storage::sd::pins_miso;
-  doc["storage"]["sd"]["pins"]["clk"] = storage::sd::pins_clk;
-  doc["storage"]["sd"]["pins"]["cs"] = storage::sd::pins_cs;
-
-  // Update configuration
-  doc["update"]["url"] = update::ota::manifest_url;
-  doc["update"]["interval"] = update::ota::check_interval;
+  doc.to<JsonObject>();
+  for (size_t i = 0; i < settings::count; i++) {
+    const settings::Setting& setting = settings::all[i];
+    JsonVariant target = create(doc, setting.path);
+    std::visit([&target](auto* value) { target.set(*value); }, setting.value);
+  }
 
   FsFile config_file;
   if (!storage::sd::Sd::openFileForWrite(CONFIG_TMP_FILE_PATH, config_file)) {

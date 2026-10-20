@@ -37,7 +37,7 @@ class SystemController {
   // Software components
   std::unique_ptr<application::clock::Clock> _clock;
   std::unique_ptr<network::mqtt::Mqtt> _mqtt;
-  std::unique_ptr<Cli> _cli;
+  std::unique_ptr<cli::Cli> _cli;
   update::ota::Ota _ota;
   AnimatedGIF _gif;
   // Pending configuration changes
@@ -49,6 +49,7 @@ class SystemController {
   void wait(uint32_t ms);
   bool keepRendering();
   void runUpdate();
+  void setupCli();
   bool healthy();
 
  public:

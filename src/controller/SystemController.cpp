@@ -90,8 +90,60 @@ void SystemController::begin() {
   _clock = std::make_unique<application::clock::Clock>();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
+  // setup the configuration menu
+  setupCli();
   Serial.println("SystemController: Initialized the software components!");
   delay(2000);
+}
+
+/**
+ * Function used to set up the configuration menu and its actions
+ */
+void SystemController::setupCli() {
+  std::vector<cli::Action> actions;
+  actions.push_back(
+      {"network/wifi/reset",
+       "Forget the Wi-Fi credentials and reboot into the setup portal",
+       [this]() {
+         _wifi->reset();
+         ESP.restart();
+       },
+       true});
+  actions.push_back({"update/check", "Check for a new firmware",
+                     [this]() {
+                       if (!_ota.check()) {
+                         Serial.println("Checking for a new firmware failed");
+                       } else if (_ota.updateAvailable()) {
+                         Serial.printf("Firmware %s is available\n",
+                                       _ota.latest().version.c_str());
+                       } else {
+                         Serial.println("The firmware is up to date");
+                       }
+                       if (_mqtt) _mqtt->publishUpdateState();
+                     },
+                     false});
+  actions.push_back({"update/install", "Install the latest firmware",
+                     [this]() {
+                       if (_ota.updateAvailable()) {
+                         _ota.requestInstall();
+                       } else {
+                         Serial.println("No update available, run check "
+                                        "first");
+                       }
+                     },
+                     true});
+
+  _cli = std::make_unique<cli::Cli>(
+      [this](const storage::settings::Setting& setting) {
+        // Apply settings that take effect immediately
+        auto* value = std::get_if<uint8_t*>(&setting.value);
+        if (value && *value == &display::matrix::brightness) {
+          display::matrix::Matrix::setBrightness(display::matrix::brightness);
+          if (_mqtt) _mqtt->publishLightState();
+        }
+      },
+      std::move(actions));
+  _cli->begin();
 }
 
 /**
@@ -167,6 +219,7 @@ void SystemController::applicationLoop() {
  * Function used for running the system parts of the device
  */
 void SystemController::systemLoop() {
+  if (_cli) _cli->loop();
   if (_mqtt) _mqtt->loop();
 
   if (_config_dirty && millis() - _config_changed_at >= SAVE_DELAY_MS) {
