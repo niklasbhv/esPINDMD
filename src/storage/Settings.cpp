@@ -76,9 +76,8 @@ Setting all[] = {
   {"network/mqtt/credentials/username", &mqtt::username, 0, 63, REBOOT, "MQTT username, empty for none"},
   {"network/mqtt/credentials/password", &mqtt::password, 0, 63, REBOOT | SECRET, "MQTT password, empty for none"},
   {"network/mqtt/client/id", &mqtt::client_id, 0, 63, REBOOT, "MQTT client id, empty to derive it from the MAC"},
-  // Wi-Fi credentials are managed by the Wi-Fi setup portal
-  {"network/wifi/ssid", &wifi::ssid, 0, 32, HIDDEN, ""},
-  {"network/wifi/password", &wifi::password, 0, 63, HIDDEN | SECRET, ""},
+  {"network/wifi/ssid", &wifi::ssid, 0, 32, REBOOT, "Wi-Fi network, empty to use the setup portal"},
+  {"network/wifi/password", &wifi::password, 0, 63, REBOOT | SECRET, "Wi-Fi password"},
 
   // Storage configuration
   {"storage/sd/pins/mosi", &sd::pins_mosi, 0, PIN_MAX, REBOOT, "SD card MOSI pin"},

@@ -60,17 +60,21 @@ class SequentialIterator {
 // Needed because of a limitation of the AnimationGIF library
 inline SdFs sd;
 inline FsFile file;
+// Whether a SD card was found
+inline bool mounted = false;
 
 /**
  * Class used for initialization and low level access to
- * files on the SD Card.
+ * files on the SD Card. The device keeps running without a SD card,
+ * only the GIF playback is not available then.
  */
 class Sd {
  private:
   std::unique_ptr<SequentialIterator> _sequential_iterator;
 
  public:
-  Sd();
+  bool begin();
+  static bool available();
   static bool openFile(const char* filename, FsFile& file);
   static bool openFileForWrite(const char* filename, FsFile& file);
   static bool closeFile(FsFile& file);

@@ -32,11 +32,16 @@ The available environments are `esp32dev`, `sparkfun_esp32_iot_redboard`, `esp32
 
 ## Setup the esPINDMD
 
-The setup process will involve connecting the esPINDMD to a network and loading it up with GIFs for displaying.
+The esPINDMD can be set up in two ways, which can also be combined:
+
+- **Wi-Fi setup portal**: Without a configured network, the esPINDMD opens the Wi-Fi network `esPINDMD` (password `pinball12345`) for 180 seconds and shows its details on the matrix. Connect to it and open `http://192.168.4.1` to select a network.
+- **Serial console**: The menu described below is available a few seconds after powering on, also while the setup portal is open. This includes the Wi-Fi credentials (`network/wifi`) as well as the pins of the matrix and the SD card.
+
+GIFs are played from the `gif` directory of the SD card, including all sub directories. Without a SD card, the esPINDMD runs as a clock only.
 
 ## Configuration
 
-The configuration is stored as `config.json` on the SD card, examples for all supported platforms can be found in the [configurations](configurations) directory.
+The configuration is stored in the internal flash of the esPINDMD, so it is available without a SD card. A `config.json` on the SD card is imported on every boot and overrides the stored configuration, which allows editing it on a computer. Saving the configuration also updates the `config.json`. Examples for all supported platforms can be found in the [configurations](configurations) directory.
 
 The configuration can also be changed using the menu on the serial console (115200 baud), e.g. using `pio device monitor`. Press Enter to open the menu, its structure follows the structure of the configuration file:
 

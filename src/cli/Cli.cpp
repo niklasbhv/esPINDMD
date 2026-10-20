@@ -203,7 +203,7 @@ void Cli::save() {
     Serial.println(_reboot_required ? "Saved, reboot (r) to apply all changes"
                                     : "Saved");
   } else {
-    Serial.println("Saving failed, check the SD card");
+    Serial.println("Saving failed");
   }
 }
 

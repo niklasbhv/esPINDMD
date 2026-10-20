@@ -20,34 +20,34 @@
  * Function used to initialize the SystemController
  */
 void SystemController::begin() {
-  // setup the SD Card configuration
-  _sd = std::make_unique<storage::sd::Sd>();
-  Serial.println("SystemController: Loading configuration...");
-  if (storage::configuration::Configuration::load()) {
-    Serial.println("SystemController: Configuration loaded");
-  } else {
-    Serial.println(
-        "SystemController: No configuration found! Loading defaults");
-  }
+  // The configuration is loaded from the internal flash first, as it
+  // contains the pins of the SD card and the matrix
+  storage::configuration::Configuration::load();
 
   Serial.println("SystemController: Initializing the hardware components...");
+  // A config.json on the SD card overrides the stored configuration
+  _sd = std::make_unique<storage::sd::Sd>();
+  if (_sd->begin()) storage::configuration::Configuration::importFromSd();
   delay(2000);
   // setup the matrix configuration
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
-  // setup the Wi-Fi configuration
-  _wifi = std::make_unique<network::wifi::Wifi>([]() {
+  // setup the Wi-Fi configuration, the setup portal runs in the background
+  network::wifi::PortalCallbacks callbacks;
+  callbacks.on_open = []() {
     // Show how to reach the setup portal while it is open
     display::matrix::Matrix::printLines(
         {"Wi-Fi Setup", String("SSID: ") + network::wifi::AP_SSID,
          String("Pass: ") + network::wifi::AP_PASSWORD,
          WiFi.softAPIP().toString()});
-  });
-  // Restore the boot screen for the rest of the startup
-  if (_wifi->portalOpened()) {
+  };
+  callbacks.on_close = [](bool connected) {
+    // Keep the credentials entered in the portal
+    if (connected) storage::configuration::Configuration::save();
     display::matrix::Matrix::clearScreen();
-    display::matrix::Matrix::printLogo();
-  }
+  };
+  _wifi = std::make_unique<network::wifi::Wifi>(std::move(callbacks));
+  _wifi->begin();
   Serial.println("SystemController: Initialized the hardware components!");
   Serial.println("SystemController: Initializing the software components...");
   _ota.begin();
@@ -62,6 +62,12 @@ void SystemController::begin() {
   setupCli();
   Serial.println("SystemController: Initialized the software components!");
   delay(2000);
+
+  // The setup screen of the Wi-Fi portal takes precedence
+  if (!_sd->available() && !_wifi->portalActive()) {
+    display::matrix::Matrix::printLines({"No SD card", "Clock only"});
+    delay(NOTICE_MS);
+  }
 }
 
 /**
@@ -114,6 +120,7 @@ void SystemController::setupCli() {
        "Forget the Wi-Fi credentials and reboot into the setup portal",
        [this]() {
          _wifi->reset();
+         storage::configuration::Configuration::save();
          ESP.restart();
        },
        true});
@@ -191,10 +198,13 @@ void SystemController::wait(uint32_t ms) {
 
 /**
  * Function used to check if the applications should keep rendering,
- * they stop if the matrix is turned off or an update is requested
+ * they stop if the matrix is turned off, an update is requested or the
+ * Wi-Fi setup portal is open
  */
 bool SystemController::keepRendering() {
-  return display::matrix::Matrix::isOn() && !_ota.installRequested();
+  // The setup screen of the Wi-Fi portal stays visible while it is open
+  return display::matrix::Matrix::isOn() && !_ota.installRequested() &&
+         !_wifi->portalActive();
 }
 
 /**
@@ -209,12 +219,18 @@ void SystemController::applicationLoop() {
   }
   if (!keepRendering()) return;
 
-  display::matrix::Matrix::printClock(_clock->dateTime("H:i"));
+  // Until the time is synced, e.g. without network, no date is shown
+  bool synced = _clock->synced();
+  display::matrix::Matrix::printClock(synced ? _clock->dateTime("H:i")
+                                             : String("--:--"));
   wait(SHOW_APPLICATION_MS);
   if (!keepRendering()) return;
-  display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
-  wait(SHOW_APPLICATION_MS);
-  if (!keepRendering()) return;
+  if (synced) {
+    display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
+    wait(SHOW_APPLICATION_MS);
+  }
+  // GIFs are only available with a SD card
+  if (!keepRendering() || !_sd->available()) return;
   String filename;
   if (!_sd->next(filename)) {
     Serial.println(
@@ -230,6 +246,7 @@ void SystemController::applicationLoop() {
  */
 void SystemController::systemLoop() {
   if (_cli) _cli->loop();
+  if (_wifi) _wifi->loop();
   if (_mqtt) _mqtt->loop();
 
   if (_config_dirty && millis() - _config_changed_at >= SAVE_DELAY_MS) {

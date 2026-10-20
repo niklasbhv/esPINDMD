@@ -16,6 +16,8 @@
 
 #include "Clock.hpp"
 
+#include <WiFi.h>
+
 namespace application::clock {
 
 Clock::Clock() {
@@ -24,7 +26,9 @@ Clock::Clock() {
   Serial.printf("Clock: Syncing with NTP server: %s\r\n", ntp_server.c_str());
   ezt::setInterval(ntp_sync_timeout);
   // Without network the time is synced later on by ezt::events()
-  if (!ezt::waitForSync(INITIAL_SYNC_TIMEOUT_S)) {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Clock: No network, syncing in the background");
+  } else if (!ezt::waitForSync(INITIAL_SYNC_TIMEOUT_S)) {
     Serial.println("Clock: Initial sync timed out, retrying in the background");
   }
   timezone.setLocation(ntp_timezone.c_str());
@@ -34,6 +38,14 @@ Clock::Clock() {
 String Clock::dateTime(const String& format) {
   ezt::events();
   return timezone.dateTime(format);
+}
+
+/**
+ * Function used to check if the time was synced at least once
+ */
+bool Clock::synced() {
+  ezt::events();
+  return ezt::timeStatus() != timeNotSet;
 }
 
 }  // namespace application::clock

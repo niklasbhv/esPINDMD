@@ -28,24 +28,55 @@ static bool isGifFile(const char* filename) {
   return extension && strcasecmp(extension, ".gif") == 0;
 }
 
-Sd::Sd() {
-  Serial.println("SD: Initializing the sd component...");
-  Serial.println("SD: SPI pins:");
-  Serial.println("MISO: " + String(pins_miso));
-  Serial.println("MOSI: " + String(pins_mosi));
-  Serial.println("CLK:  " + String(pins_clk));
-  Serial.println("CS:   " + String(pins_cs));
+/**
+ * Function used to mount the SD card using the given SPI pins
+ */
+static bool mount(uint8_t clk, uint8_t miso, uint8_t mosi, uint8_t cs) {
+  // The bus needs to be restarted to change the pins, SdFat keeps them as
+  // the bus is already started
+  SPI.end();
+  SPI.begin(clk, miso, mosi, cs);
+  return sd.begin(SdSpiConfig(cs, DEDICATED_SPI, SPI_CLOCK));
+}
 
-  // SdFat keeps the pins as the bus is already started
-  SPI.begin(pins_clk, pins_miso, pins_mosi, pins_cs);
-  // try to initialize the sd card
-  if (!sd.begin(SdSpiConfig(pins_cs, DEDICATED_SPI, SPI_CLOCK))) {
-    Serial.println("SD: Initialization of the sd component failed!");
-    sd.initErrorHalt();
+/**
+ * Function used to mount the SD card. If the configured pins fail, the
+ * default pins of the board are tried, as wrong pins could otherwise only
+ * be fixed using the CLI.
+ *
+ * @return true if a SD card was found
+ */
+bool Sd::begin() {
+  Serial.println("SD: Initializing the sd component...");
+  Serial.printf("SD: SPI pins MISO %u, MOSI %u, CLK %u, CS %u\r\n", pins_miso,
+                pins_mosi, pins_clk, pins_cs);
+
+  mounted = mount(pins_clk, pins_miso, pins_mosi, pins_cs);
+  bool defaults = pins_clk == SCK && pins_miso == MISO && pins_mosi == MOSI &&
+                  pins_cs == SS;
+  if (!mounted && !defaults) {
+    Serial.println("SD: Failed, retrying with the default pins of the board");
+    mounted = mount(SCK, MISO, MOSI, SS);
+    if (mounted) {
+      // Keep the working pins, so they are stored on the next save
+      Serial.println("SD: Default pins work, the configured ones are wrong");
+      pins_clk = SCK;
+      pins_miso = MISO;
+      pins_mosi = MOSI;
+      pins_cs = SS;
+    }
+  }
+
+  if (!mounted) {
+    Serial.println("SD: No SD card found, continuing without GIFs");
+    return false;
   }
   _sequential_iterator = std::make_unique<SequentialIterator>(GIF_ROOT_PATH);
   Serial.println("SD: Initialized the sd component!");
+  return true;
 }
+
+bool Sd::available() { return mounted; }
 
 bool Sd::openFile(const char* filename, FsFile& file) {
   return file.open(filename, O_READ);
@@ -72,11 +103,13 @@ bool Sd::replaceFile(const char* source, const char* target) {
 }
 
 void Sd::resetIterator() {
+  if (!mounted) return;
   _sequential_iterator = std::make_unique<SequentialIterator>(GIF_ROOT_PATH);
 }
 
 bool Sd::next(String& file_path) {
   file_path.clear();
+  if (!mounted) return false;
   return _sequential_iterator->next(file_path);
 }
 

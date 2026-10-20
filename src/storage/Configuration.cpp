@@ -17,6 +17,7 @@
 #include "Configuration.hpp"
 
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
 #include "Sd.hpp"
 #include "Settings.hpp"
@@ -61,31 +62,11 @@ static JsonVariant create(JsonDocument& doc, const char* path) {
   return node[segment];
 }
 
-bool Configuration::load() {
-  Serial.println("Configuration: Loading configuration...");
-  // If saving was interrupted between removing the old and renaming the
-  // new file, only the temporary file is left
-  if (!storage::sd::Sd::exists(CONFIG_FILE_PATH) &&
-      storage::sd::Sd::exists(CONFIG_TMP_FILE_PATH)) {
-    Serial.println("Configuration: Restoring interrupted save");
-    storage::sd::Sd::replaceFile(CONFIG_TMP_FILE_PATH, CONFIG_FILE_PATH);
-  }
-  FsFile config_file;
-  if (!storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file)) {
-    Serial.println("Configuration: Failed to open configuration file");
-    return false;
-  }
-  JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, config_file);
-  storage::sd::Sd::closeFile(config_file);
-
-  if (err) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(err.c_str());
-    return false;
-  }
-
-  // Missing, invalid or out of range values keep their defaults
+/**
+ * Function used to apply the values of a JSON document to the settings.
+ * Missing, invalid or out of range values keep their current value.
+ */
+static void fromJson(const JsonDocument& doc) {
   for (size_t i = 0; i < settings::count; i++) {
     const settings::Setting& setting = settings::all[i];
     JsonVariantConst value = find(doc, setting.path);
@@ -114,19 +95,44 @@ bool Configuration::load() {
         },
         setting.value);
   }
-  return true;
 }
 
-bool Configuration::save() {
-  Serial.println("Configuration: Saving configuration...");
-  JsonDocument doc;
+/**
+ * Function used to write all settings into a JSON document
+ */
+static void toJson(JsonDocument& doc) {
   doc.to<JsonObject>();
   for (size_t i = 0; i < settings::count; i++) {
     const settings::Setting& setting = settings::all[i];
     JsonVariant target = create(doc, setting.path);
     std::visit([&target](auto* value) { target.set(*value); }, setting.value);
   }
+}
 
+/**
+ * Function used to serialize all settings into a compact JSON string
+ */
+static std::string serialize() {
+  JsonDocument doc;
+  toJson(doc);
+  std::string json;
+  serializeJson(doc, json);
+  return json;
+}
+
+static bool saveToNvs(const std::string& json) {
+  Preferences preferences;
+  if (!preferences.begin(NVS_NAMESPACE, false)) {
+    Serial.println("Configuration: Failed to open the internal flash");
+    return false;
+  }
+  bool ok = preferences.putString(NVS_KEY, json.c_str()) == json.length();
+  preferences.end();
+  if (!ok) Serial.println("Configuration: Failed to write the internal flash");
+  return ok;
+}
+
+static bool saveToSd(const JsonDocument& doc) {
   FsFile config_file;
   if (!storage::sd::Sd::openFileForWrite(CONFIG_TMP_FILE_PATH, config_file)) {
     Serial.println("Configuration: Failed to open configuration file");
@@ -142,9 +148,79 @@ bool Configuration::save() {
     Serial.println("Configuration: Failed to replace configuration file");
     return false;
   }
-
-  Serial.println("Configuration: Saved configuration!");
   return true;
+}
+
+bool Configuration::load() {
+  Serial.println("Configuration: Loading configuration...");
+  Preferences preferences;
+  // Opening read only fails if nothing was stored yet
+  if (!preferences.begin(NVS_NAMESPACE, true)) {
+    Serial.println("Configuration: Nothing stored yet, using defaults");
+    return false;
+  }
+  String json =
+      preferences.isKey(NVS_KEY) ? preferences.getString(NVS_KEY) : String();
+  preferences.end();
+
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, json);
+  if (err) {
+    Serial.printf("Configuration: Invalid stored configuration: %s\r\n",
+                  err.c_str());
+    return false;
+  }
+  fromJson(doc);
+  return true;
+}
+
+bool Configuration::importFromSd() {
+  if (!storage::sd::Sd::available()) return false;
+
+  // If saving was interrupted between removing the old and renaming the
+  // new file, only the temporary file is left
+  if (!storage::sd::Sd::exists(CONFIG_FILE_PATH) &&
+      storage::sd::Sd::exists(CONFIG_TMP_FILE_PATH)) {
+    Serial.println("Configuration: Restoring interrupted save");
+    storage::sd::Sd::replaceFile(CONFIG_TMP_FILE_PATH, CONFIG_FILE_PATH);
+  }
+  FsFile config_file;
+  if (!storage::sd::Sd::openFile(CONFIG_FILE_PATH, config_file)) {
+    Serial.println("Configuration: No configuration file on the SD card");
+    return false;
+  }
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, config_file);
+  storage::sd::Sd::closeFile(config_file);
+  if (err) {
+    Serial.printf("Configuration: Invalid configuration file: %s\r\n",
+                  err.c_str());
+    return false;
+  }
+
+  std::string before = serialize();
+  fromJson(doc);
+  std::string after = serialize();
+  // Only write the internal flash if something changed
+  if (before != after) {
+    Serial.println("Configuration: Imported the configuration file");
+    saveToNvs(after);
+  }
+  return true;
+}
+
+bool Configuration::save() {
+  Serial.println("Configuration: Saving configuration...");
+  JsonDocument doc;
+  toJson(doc);
+  std::string json;
+  serializeJson(doc, json);
+
+  bool ok = saveToNvs(json);
+  // The configuration file is kept in sync, as it is imported on boot
+  if (storage::sd::Sd::available()) ok = saveToSd(doc) && ok;
+  if (ok) Serial.println("Configuration: Saved configuration!");
+  return ok;
 }
 
 }  // namespace storage::configuration

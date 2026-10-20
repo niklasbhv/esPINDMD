@@ -40,6 +40,7 @@ class Clock {
  public:
   Clock();
   String dateTime(const String& format);
+  bool synced();
 };
 
 }  // namespace application::clock
