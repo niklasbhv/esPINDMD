@@ -37,7 +37,7 @@ Wifi::Wifi(PortalCallback on_portal) {
   _wm.setAPCallback([this, on_portal](WiFiManager*) {
     _portal_opened = true;
     Serial.printf("Wi-Fi: Opened the setup portal, connect to %s with "
-                  "password %s and open http://%s\n",
+                  "password %s and open http://%s\r\n",
                   AP_SSID, AP_PASSWORD, WiFi.softAPIP().toString().c_str());
     if (on_portal) on_portal();
   });

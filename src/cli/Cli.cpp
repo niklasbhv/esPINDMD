@@ -136,13 +136,13 @@ void Cli::select(const Entry& entry) {
     printMenu();
   } else if (entry.setting) {
     _editing = entry.setting;
-    Serial.printf("%s\n", _editing->description);
-    Serial.printf("Current value: %s, allowed: %s\n",
+    Serial.printf("%s\r\n", _editing->description);
+    Serial.printf("Current value: %s, allowed: %s\r\n",
                   _editing->toString().c_str(), _editing->range().c_str());
     Serial.println("Enter the new value, an empty line keeps the current one");
   } else if (entry.action->confirm) {
     _confirming = entry.action;
-    Serial.printf("%s, enter yes to continue\n", entry.action->description);
+    Serial.printf("%s, enter yes to continue\r\n", entry.action->description);
   } else {
     entry.action->run();
   }
@@ -158,11 +158,11 @@ void Cli::handleSettingInput(const std::string& input) {
 
   std::string error;
   if (!setting->parse(input, error)) {
-    Serial.printf("Invalid value: %s\n", error.c_str());
+    Serial.printf("Invalid value: %s\r\n", error.c_str());
     return;
   }
   _unsaved = true;
-  Serial.printf("%s = %s\n", setting->name(), setting->toString().c_str());
+  Serial.printf("%s = %s\r\n", setting->name(), setting->toString().c_str());
   if (setting->hasFlag(storage::settings::REBOOT)) {
     _reboot_required = true;
     Serial.println("Takes effect after saving (s) and rebooting (r)");
@@ -218,18 +218,18 @@ void Cli::reboot() {
 }
 
 void Cli::printInfo() {
-  Serial.printf("Firmware:  %s (%s)\n", ESPINDMD_VERSION, ESPINDMD_ENV);
-  Serial.printf("MAC:       %s\n", WiFi.macAddress().c_str());
+  Serial.printf("Firmware:  %s (%s)\r\n", ESPINDMD_VERSION, ESPINDMD_ENV);
+  Serial.printf("MAC:       %s\r\n", WiFi.macAddress().c_str());
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("Wi-Fi:     %s (%d dBm)\n", WiFi.SSID().c_str(),
+    Serial.printf("Wi-Fi:     %s (%d dBm)\r\n", WiFi.SSID().c_str(),
                   WiFi.RSSI());
-    Serial.printf("IP:        %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("IP:        %s\r\n", WiFi.localIP().toString().c_str());
   } else {
     Serial.println("Wi-Fi:     Not connected");
   }
-  Serial.printf("Free heap: %lu bytes\n",
+  Serial.printf("Free heap: %lu bytes\r\n",
                 static_cast<unsigned long>(ESP.getFreeHeap()));
-  Serial.printf("Uptime:    %lu s\n",
+  Serial.printf("Uptime:    %lu s\r\n",
                 static_cast<unsigned long>(millis() / 1000));
 }
 
@@ -274,7 +274,7 @@ std::vector<Cli::Entry> Cli::entries() const {
 }
 
 void Cli::printMenu() {
-  Serial.printf("\n== esPINDMD configuration: /%s ==\n", _path.c_str());
+  Serial.printf("\r\n== esPINDMD configuration: /%s ==\r\n", _path.c_str());
   std::vector<Entry> menu = entries();
   for (size_t i = 0; i < menu.size(); i++) {
     const Entry& entry = menu[i];
@@ -286,11 +286,11 @@ void Cli::printMenu() {
       value = std::string("[") + entry.action->description + "]";
     }
     if (name.length() < NAME_WIDTH) name.append(NAME_WIDTH - name.length(), ' ');
-    Serial.printf("  %2u) %s %s\n", static_cast<unsigned>(i + 1),
+    Serial.printf("  %2u) %s %s\r\n", static_cast<unsigned>(i + 1),
                   name.c_str(), value.c_str());
   }
   Serial.println();
-  Serial.printf("  %s s) save  r) reboot  i) info  h) help  q) quit\n",
+  Serial.printf("  %s s) save  r) reboot  i) info  h) help  q) quit\r\n",
                 _path.empty() ? "" : "b) back ");
 }
 

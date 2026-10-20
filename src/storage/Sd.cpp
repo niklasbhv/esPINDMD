@@ -22,7 +22,7 @@ namespace storage::sd {
 
 Sd::Sd() {
   Serial.println("SD: Initializing the sd component...");
-  Serial.println("\nSD SPI pins:\n");
+  Serial.println("\r\nSD SPI pins:\r\n");
   Serial.println("MISO: " + String(pins_miso));
   Serial.println("MOSI: " + String(pins_mosi));
   Serial.println("CLK:  " + String(pins_clk));

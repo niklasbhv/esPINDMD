@@ -122,7 +122,7 @@ void SystemController::setupCli() {
                        if (!_ota.check()) {
                          Serial.println("Checking for a new firmware failed");
                        } else if (_ota.updateAvailable()) {
-                         Serial.printf("Firmware %s is available\n",
+                         Serial.printf("Firmware %s is available\r\n",
                                        _ota.latest().version.c_str());
                        } else {
                          Serial.println("The firmware is up to date");

@@ -44,7 +44,7 @@ namespace update::ota {
 constexpr uint32_t RETRY_INTERVAL_MS = 10 * 60 * 1000;
 
 void Ota::begin() {
-  Serial.printf("OTA: Running firmware %s for %s\n", ESPINDMD_VERSION,
+  Serial.printf("OTA: Running firmware %s for %s\r\n", ESPINDMD_VERSION,
                 ESPINDMD_ENV);
   if (pendingConfirm()) {
     Serial.println("OTA: Firmware is not confirmed yet, waiting for it to "
@@ -85,7 +85,7 @@ bool Ota::loop() {
  * @return true if the manifest was read successfully
  */
 bool Ota::check() {
-  Serial.printf("OTA: Checking %s\n", manifest_url.c_str());
+  Serial.printf("OTA: Checking %s\r\n", manifest_url.c_str());
   bool ok = get(manifest_url, [this](HTTPClient& http) {
     // Only keep the build of the running board to save memory
     JsonDocument filter;
@@ -98,14 +98,14 @@ bool Ota::check() {
     DeserializationError err = deserializeJson(
         doc, http.getString(), DeserializationOption::Filter(filter));
     if (err) {
-      Serial.printf("OTA: Invalid manifest: %s\n", err.c_str());
+      Serial.printf("OTA: Invalid manifest: %s\r\n", err.c_str());
       return false;
     }
 
     JsonVariantConst build = doc["builds"][ESPINDMD_ENV];
     if (!doc["version"].is<const char*>() || !build["url"].is<const char*>() ||
         !build["sha256"].is<const char*>()) {
-      Serial.printf("OTA: Manifest contains no build for %s\n", ESPINDMD_ENV);
+      Serial.printf("OTA: Manifest contains no build for %s\r\n", ESPINDMD_ENV);
       return false;
     }
 
@@ -122,7 +122,7 @@ bool Ota::check() {
 
   if (ok) {
     _checked = true;
-    Serial.printf("OTA: Latest version %s, installed %s\n",
+    Serial.printf("OTA: Latest version %s, installed %s\r\n",
                   _latest.version.c_str(), ESPINDMD_VERSION);
   }
   return ok;
@@ -142,7 +142,7 @@ bool Ota::install(const ProgressCallback& progress) {
     return false;
   }
 
-  Serial.printf("OTA: Installing %s from %s (free heap: %lu bytes)\n",
+  Serial.printf("OTA: Installing %s from %s (free heap: %lu bytes)\r\n",
                 _latest.version.c_str(), _latest.url.c_str(),
                 static_cast<unsigned long>(ESP.getFreeHeap()));
   _installing = true;
@@ -172,12 +172,12 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
     return false;
   }
   if (_latest.size != 0 && static_cast<size_t>(length) != _latest.size) {
-    Serial.printf("OTA: Size mismatch, expected %u got %d bytes\n",
+    Serial.printf("OTA: Size mismatch, expected %u got %d bytes\r\n",
                   _latest.size, length);
     return false;
   }
   if (!Update.begin(length, U_FLASH)) {
-    Serial.printf("OTA: %s\n", Update.errorString());
+    Serial.printf("OTA: %s\r\n", Update.errorString());
     return false;
   }
 
@@ -205,7 +205,7 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
     size_t read = stream->readBytes(buffer, chunk);
     mbedtls_sha256_update(&sha, buffer, read);
     if (Update.write(buffer, read) != read) {
-      Serial.printf("OTA: %s\n", Update.errorString());
+      Serial.printf("OTA: %s\r\n", Update.errorString());
       break;
     }
     written += read;
@@ -214,7 +214,7 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
     int8_t percent = written * 100 / length;
     if (percent != _progress) {
       _progress = percent;
-      if (percent % 10 == 0) Serial.printf("OTA: %d%%\n", percent);
+      if (percent % 10 == 0) Serial.printf("OTA: %d%%\r\n", percent);
       if (progress) progress(percent);
     }
   }
@@ -233,7 +233,7 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
     sprintf(hex + i * 2, "%02x", digest[i]);
   }
   if (strcasecmp(hex, _latest.sha256.c_str()) != 0) {
-    Serial.printf("OTA: SHA256 mismatch, expected %s got %s\n",
+    Serial.printf("OTA: SHA256 mismatch, expected %s got %s\r\n",
                   _latest.sha256.c_str(), hex);
     Update.abort();
     return false;
@@ -241,7 +241,7 @@ bool Ota::download(HTTPClient& http, const ProgressCallback& progress) {
 
   // Validates the image and sets it as the boot partition
   if (!Update.end()) {
-    Serial.printf("OTA: %s\n", Update.errorString());
+    Serial.printf("OTA: %s\r\n", Update.errorString());
     return false;
   }
   return true;
@@ -270,13 +270,13 @@ bool Ota::get(const std::string& url,
   http.setTimeout(DOWNLOAD_TIMEOUT_MS);
   http.setUserAgent("esPINDMD/" ESPINDMD_VERSION);
   if (!http.begin(*client, url.c_str())) {
-    Serial.printf("OTA: Invalid URL %s\n", url.c_str());
+    Serial.printf("OTA: Invalid URL %s\r\n", url.c_str());
     return false;
   }
 
   int code = http.GET();
   if (code != HTTP_CODE_OK) {
-    Serial.printf("OTA: Request to %s failed: %d %s\n", url.c_str(), code,
+    Serial.printf("OTA: Request to %s failed: %d %s\r\n", url.c_str(), code,
                   code < 0 ? http.errorToString(code).c_str() : "");
     http.end();
     return false;

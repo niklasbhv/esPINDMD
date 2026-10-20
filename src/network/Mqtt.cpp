@@ -65,14 +65,14 @@ void Mqtt::begin() {
 bool Mqtt::connect() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
-  Serial.printf("MQTT: Connecting to %s:%u...\n", server.c_str(), port);
+  Serial.printf("MQTT: Connecting to %s:%u...\r\n", server.c_str(), port);
   const char* user = username.empty() ? nullptr : username.c_str();
   const char* pass = password.empty() ? nullptr : password.c_str();
   // The last will marks the device as unavailable if the connection drops
   if (!_mqtt_client.connect(_client_id.c_str(), user, pass,
                             _availability_topic.c_str(), 0, true,
                             "offline")) {
-    Serial.printf("MQTT: Connection failed, state %d\n", _mqtt_client.state());
+    Serial.printf("MQTT: Connection failed, state %d\r\n", _mqtt_client.state());
     return false;
   }
   Serial.println("MQTT: Connected to server!");
@@ -227,7 +227,7 @@ void Mqtt::onLightCommand(uint8_t* payload, size_t length) {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, payload, length);
   if (err) {
-    Serial.printf("MQTT: Invalid command: %s\n", err.c_str());
+    Serial.printf("MQTT: Invalid command: %s\r\n", err.c_str());
     return;
   }
 
