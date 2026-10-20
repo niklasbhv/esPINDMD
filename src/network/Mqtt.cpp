@@ -47,7 +47,8 @@ void Mqtt::begin() {
   _update_state_topic = base + "/update/state";
   _update_command_topic = base + "/update/install";
 
-  _mqtt_client.setServer(server.c_str(), port);
+  _server = server;
+  _mqtt_client.setServer(_server.c_str(), port);
   _mqtt_client.setBufferSize(BUFFER_SIZE);
   _mqtt_client.setCallback(
       [this](char* topic, uint8_t* payload, size_t length) {
@@ -65,7 +66,7 @@ void Mqtt::begin() {
 bool Mqtt::connect() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
-  Serial.printf("MQTT: Connecting to %s:%u...\r\n", server.c_str(), port);
+  Serial.printf("MQTT: Connecting to %s:%u...\r\n", _server.c_str(), port);
   const char* user = username.empty() ? nullptr : username.c_str();
   const char* pass = password.empty() ? nullptr : password.c_str();
   // The last will marks the device as unavailable if the connection drops
@@ -96,10 +97,16 @@ void Mqtt::loop() {
     _mqtt_client.loop();
     return;
   }
+  // Without Wi-Fi there is nothing to back off from
+  if (WiFi.status() != WL_CONNECTED) return;
   uint32_t now = millis();
-  if (now - _last_reconnect_attempt >= RECONNECT_INTERVAL_MS) {
-    _last_reconnect_attempt = now;
-    connect();
+  if (now - _last_reconnect_attempt < _reconnect_interval) return;
+  _last_reconnect_attempt = now;
+  if (connect()) {
+    _reconnect_interval = RECONNECT_INTERVAL_MS;
+  } else {
+    _reconnect_interval =
+        std::min(_reconnect_interval * 2, MAX_RECONNECT_INTERVAL_MS);
   }
 }
 

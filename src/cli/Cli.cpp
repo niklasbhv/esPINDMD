@@ -221,6 +221,7 @@ void Cli::reboot() {
 void Cli::printInfo() {
   Serial.printf("Firmware:  %s (%s)\r\n", ESPINDMD_VERSION, ESPINDMD_ENV);
   Serial.printf("MAC:       %s\r\n", WiFi.macAddress().c_str());
+  Serial.printf("Hostname:  %s\r\n", WiFi.getHostname());
   if (WiFi.status() == WL_CONNECTED) {
     Serial.printf("Wi-Fi:     %s (%d dBm)\r\n", WiFi.SSID().c_str(),
                   WiFi.RSSI());

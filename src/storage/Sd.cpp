@@ -58,12 +58,9 @@ bool Sd::begin() {
     Serial.println("SD: Failed, retrying with the default pins of the board");
     mounted = mount(SCK, MISO, MOSI, SS);
     if (mounted) {
-      // Keep the working pins, so they are stored on the next save
       Serial.println("SD: Default pins work, the configured ones are wrong");
-      pins_clk = SCK;
-      pins_miso = MISO;
-      pins_mosi = MOSI;
-      pins_cs = SS;
+      _default_pins = true;
+      restoreWorkingPins();
     }
   }
 
@@ -76,6 +73,24 @@ bool Sd::begin() {
 }
 
 bool Sd::available() { return mounted; }
+
+/**
+ * Function used to set the pins back to the working default pins, if they
+ * were used as a fallback. Required after importing a configuration file,
+ * as it may contain the wrong pins again.
+ *
+ * @return true if the pins were changed
+ */
+bool Sd::restoreWorkingPins() {
+  if (!_default_pins) return false;
+  bool changed = pins_clk != SCK || pins_miso != MISO || pins_mosi != MOSI ||
+                 pins_cs != SS;
+  pins_clk = SCK;
+  pins_miso = MISO;
+  pins_mosi = MOSI;
+  pins_cs = SS;
+  return changed;
+}
 
 bool Sd::openFile(const char* filename, FsFile& file) {
   return file.open(filename, O_READ);

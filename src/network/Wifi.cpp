@@ -16,6 +16,8 @@
 
 #include "Wifi.hpp"
 
+#include <esp_mac.h>
+
 namespace network::wifi {
 
 Wifi::Wifi(PortalCallbacks callbacks) : _callbacks(std::move(callbacks)) {}
@@ -26,9 +28,28 @@ Wifi::Wifi(PortalCallbacks callbacks) : _callbacks(std::move(callbacks)) {}
  */
 void Wifi::begin() {
   Serial.println("Wi-Fi: Initializing the Wi-Fi component...");
+  // The hostname contains the end of the MAC address to tell multiple
+  // devices apart, it has to be set before the Wi-Fi is started. It is also
+  // used as name of the access point of the setup portal.
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+  char hostname[20];
+  snprintf(hostname, sizeof(hostname), "esPINDMD-%02x%02x%02x", mac[3], mac[4],
+           mac[5]);
+  _hostname = hostname;
+  WiFi.setHostname(_hostname.c_str());
+  _wm.setHostname(_hostname.c_str());
   // set the Wi-Fi mode
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname("esPINDMD");
+  Serial.printf("Wi-Fi: Hostname %s\r\n", _hostname.c_str());
+
+  // Generated after starting the Wi-Fi, as the random number generator
+  // only produces true random numbers while the radio is running
+  _ap_password.clear();
+  size_t characters = strlen(AP_PASSWORD_CHARACTERS);
+  for (size_t i = 0; i < AP_PASSWORD_LENGTH; i++) {
+    _ap_password += AP_PASSWORD_CHARACTERS[esp_random() % characters];
+  }
   // set dark theme
   _wm.setClass("invert");
   // run the portal in the background, it is processed by loop()
@@ -40,7 +61,8 @@ void Wifi::begin() {
     Serial.printf(
         "Wi-Fi: Opened the setup portal, connect to %s with "
         "password %s and open http://%s\r\n",
-        AP_SSID, AP_PASSWORD, WiFi.softAPIP().toString().c_str());
+        _hostname.c_str(), _ap_password.c_str(),
+        WiFi.softAPIP().toString().c_str());
     if (_callbacks.on_open) _callbacks.on_open();
   });
   // Keep the credentials entered in the portal in the configuration,
@@ -56,7 +78,7 @@ void Wifi::begin() {
     Serial.printf("Wi-Fi: Connecting to %s\r\n", ssid.c_str());
     _wm.preloadWiFi(ssid.c_str(), password.c_str());
   }
-  if (_wm.autoConnect(AP_SSID, AP_PASSWORD)) {
+  if (_wm.autoConnect(_hostname.c_str(), _ap_password.c_str())) {
     Serial.printf("Wi-Fi: Connected to %s\r\n", WiFi.SSID().c_str());
   } else if (!_portal_active) {
     Serial.println("Wi-Fi: Failed to connect");
@@ -91,5 +113,11 @@ void Wifi::reset() {
 }
 
 bool Wifi::portalActive() const { return _portal_active; }
+
+const std::string& Wifi::apSsid() const { return _hostname; }
+
+const std::string& Wifi::apPassword() const { return _ap_password; }
+
+const std::string& Wifi::hostname() const { return _hostname; }
 
 }  // namespace network::wifi

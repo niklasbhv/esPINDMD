@@ -27,9 +27,13 @@ namespace network::wifi {
 inline std::string ssid = "";
 inline std::string password = "";
 
-// Access point opened by the setup portal if no network is configured
-constexpr const char* AP_SSID = "esPINDMD";
-constexpr const char* AP_PASSWORD = "pinball12345";
+// The access point opened by the setup portal if no network is configured
+// uses the hostname as name, e.g. esPINDMD-a1b2c3.
+// The password of the access point is generated randomly on every boot,
+// ambiguous characters like l, 1, o and 0 are left out
+constexpr const char* AP_PASSWORD_CHARACTERS =
+    "abcdefghijkmnpqrstuvwxyz23456789";
+constexpr size_t AP_PASSWORD_LENGTH = 10;
 // Time after which the setup portal closes and the device continues offline
 constexpr uint16_t PORTAL_TIMEOUT_S = 180;
 
@@ -53,6 +57,8 @@ class Wifi {
   PortalCallbacks _callbacks;
   bool _portal_active = false;
   bool _credentials_saved = false;
+  std::string _hostname;
+  std::string _ap_password;
 
  public:
   explicit Wifi(PortalCallbacks callbacks);
@@ -60,6 +66,9 @@ class Wifi {
   void loop();
   void reset();
   bool portalActive() const;
+  const std::string& apSsid() const;
+  const std::string& apPassword() const;
+  const std::string& hostname() const;
 };
 
 }  // namespace network::wifi

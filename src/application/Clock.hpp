@@ -17,30 +17,37 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ezTime.h>
 
 #include <string>
 
 namespace application::clock {
 
+// POSIX timezone of central Europe, used by default
+constexpr const char* DEFAULT_TIMEZONE = "CET-1CEST,M3.5.0,M10.5.0/3";
+
 inline uint8_t colour_r = 231;
 inline uint8_t colour_g = 103;
 inline uint8_t colour_b = 3;
 inline std::string ntp_server = "pool.ntp.org";
-inline std::string ntp_timezone = "Europe/Berlin";
-inline uint8_t ntp_sync_timeout = 60;
+// POSIX timezone string, see https://github.com/nayarsystems/posix_tz_db
+inline std::string ntp_timezone = DEFAULT_TIMEZONE;
+// Minutes between two syncs with the NTP server
+inline uint16_t ntp_interval = 60;
 
-// Maximum time to wait for the first NTP sync on boot
-constexpr uint16_t INITIAL_SYNC_TIMEOUT_S = 30;
-
+/**
+ * The clock keeps the system time in sync using SNTP, which runs in the
+ * background and starts syncing as soon as the network is available.
+ */
 class Clock {
  private:
-  Timezone timezone;
+  // Copy of the server, SNTP only keeps a pointer to it
+  std::string _server;
 
  public:
-  Clock();
-  String dateTime(const String& format);
-  bool synced();
+  void begin();
+  static void applyTimezone();
+  bool synced() const;
+  String format(const char* format) const;
 };
 
 }  // namespace application::clock

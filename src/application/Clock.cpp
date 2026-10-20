@@ -16,36 +16,62 @@
 
 #include "Clock.hpp"
 
-#include <WiFi.h>
+#include <esp_sntp.h>
+#include <time.h>
 
 namespace application::clock {
 
-Clock::Clock() {
+// Set by SNTP once the time was synced
+static volatile bool time_synced = false;
+
+static void onTimeSynced(struct timeval*) {
+  if (!time_synced) Serial.println("Clock: Synced the time");
+  time_synced = true;
+}
+
+void Clock::begin() {
   Serial.println("Clock: Initializing the clock component...");
-  ezt::setServer(ntp_server.c_str());
-  Serial.printf("Clock: Syncing with NTP server: %s\r\n", ntp_server.c_str());
-  ezt::setInterval(ntp_sync_timeout);
-  // Without network the time is synced later on by ezt::events()
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Clock: No network, syncing in the background");
-  } else if (!ezt::waitForSync(INITIAL_SYNC_TIMEOUT_S)) {
-    Serial.println("Clock: Initial sync timed out, retrying in the background");
+  // Older configurations used timezone names, which are not supported
+  if (ntp_timezone.find('/') != std::string::npos) {
+    Serial.printf("Clock: %s is not a POSIX timezone, using %s instead\r\n",
+                  ntp_timezone.c_str(), DEFAULT_TIMEZONE);
+    ntp_timezone = DEFAULT_TIMEZONE;
   }
-  timezone.setLocation(ntp_timezone.c_str());
+
+  _server = ntp_server;
+  Serial.printf("Clock: Syncing with NTP server: %s\r\n", _server.c_str());
+  sntp_set_time_sync_notification_cb(onTimeSynced);
+  sntp_set_sync_interval(ntp_interval * 60UL * 1000UL);
+  // Sets the timezone and starts syncing in the background
+  configTzTime(ntp_timezone.c_str(), _server.c_str());
   Serial.println("Clock: Initialized the clock component!");
 }
 
-String Clock::dateTime(const String& format) {
-  ezt::events();
-  return timezone.dateTime(format);
+/**
+ * Function used to apply a changed timezone immediately
+ */
+void Clock::applyTimezone() {
+  setenv("TZ", ntp_timezone.c_str(), 1);
+  tzset();
 }
 
 /**
  * Function used to check if the time was synced at least once
  */
-bool Clock::synced() {
-  ezt::events();
-  return ezt::timeStatus() != timeNotSet;
+bool Clock::synced() const { return time_synced; }
+
+/**
+ * Function used to format the local time
+ *
+ * @param format Format as used by strftime, e.g. "%H:%M"
+ */
+String Clock::format(const char* format) const {
+  time_t now = time(nullptr);
+  struct tm local;
+  localtime_r(&now, &local);
+  char buffer[32];
+  strftime(buffer, sizeof(buffer), format, &local);
+  return String(buffer);
 }
 
 }  // namespace application::clock

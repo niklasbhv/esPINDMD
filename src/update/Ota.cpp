@@ -335,11 +335,18 @@ const char* Ota::installedVersion() { return ESPINDMD_VERSION; }
 /**
  * Function used to check if the running firmware still needs to be confirmed
  */
+// Cached confirmation state of the running firmware, -1 if not read yet.
+// Reading it from the flash on every loop would be wasteful.
+static int8_t pending = -1;
+
 bool Ota::pendingConfirm() {
-  esp_ota_img_states_t state;
-  return esp_ota_get_state_partition(esp_ota_get_running_partition(), &state) ==
-             ESP_OK &&
-         state == ESP_OTA_IMG_PENDING_VERIFY;
+  if (pending < 0) {
+    esp_ota_img_states_t state;
+    pending = esp_ota_get_state_partition(esp_ota_get_running_partition(),
+                                          &state) == ESP_OK &&
+              state == ESP_OTA_IMG_PENDING_VERIFY;
+  }
+  return pending == 1;
 }
 
 /**
@@ -349,6 +356,7 @@ bool Ota::pendingConfirm() {
 void Ota::confirm() {
   if (!pendingConfirm()) return;
   if (esp_ota_mark_app_valid_cancel_rollback() == ESP_OK) {
+    pending = 0;
     Serial.println("OTA: Confirmed the running firmware");
   }
 }

@@ -37,6 +37,9 @@ inline std::string client_id = "";
 constexpr const char* DISCOVERY_PREFIX = "homeassistant";
 // Minimum time between two reconnection attempts
 constexpr uint32_t RECONNECT_INTERVAL_MS = 5000;
+// The interval doubles after every failed attempt up to this maximum, as
+// every attempt blocks while the broker is unreachable
+constexpr uint32_t MAX_RECONNECT_INTERVAL_MS = 5 * 60 * 1000;
 // Discovery payloads exceed the default PubSubClient buffer of 256 bytes
 constexpr size_t BUFFER_SIZE = 1024;
 // Payload Home Assistant sends to start an update
@@ -93,6 +96,9 @@ class Mqtt {
   PubSubClient _mqtt_client;
   Handlers _handlers;
   uint32_t _last_reconnect_attempt = 0;
+  uint32_t _reconnect_interval = RECONNECT_INTERVAL_MS;
+  // Copy of the server, PubSubClient only keeps a pointer to it
+  std::string _server;
 
   std::string _client_id;
   std::string _node_id;

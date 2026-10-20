@@ -27,7 +27,14 @@ void SystemController::begin() {
   Serial.println("SystemController: Initializing the hardware components...");
   // A config.json on the SD card overrides the stored configuration
   _sd = std::make_unique<storage::sd::Sd>();
-  if (_sd->begin()) storage::configuration::Configuration::importFromSd();
+  if (_sd->begin()) {
+    storage::configuration::Configuration::importFromSd();
+    // The imported file may contain the pins that just failed, store the
+    // working ones instead so the configuration fixes itself
+    if (_sd->restoreWorkingPins()) {
+      storage::configuration::Configuration::save();
+    }
+  }
   delay(2000);
   // setup the matrix configuration
   display::matrix::Matrix::begin();
@@ -47,11 +54,11 @@ void SystemController::begin() {
   }
   // setup the Wi-Fi configuration, the setup portal runs in the background
   network::wifi::PortalCallbacks callbacks;
-  callbacks.on_open = []() {
+  callbacks.on_open = [this]() {
     // Show how to reach the setup portal while it is open
     display::matrix::Matrix::printLines(
-        {"Wi-Fi Setup", String("SSID: ") + network::wifi::AP_SSID,
-         String("Pass: ") + network::wifi::AP_PASSWORD,
+        {"Wi-Fi Setup", String("SSID: ") + _wifi->apSsid().c_str(),
+         String("Pass: ") + _wifi->apPassword().c_str(),
          WiFi.softAPIP().toString()});
   };
   callbacks.on_close = [](bool connected) {
@@ -69,6 +76,7 @@ void SystemController::begin() {
 
   // setup the clock
   _clock = std::make_unique<application::clock::Clock>();
+  _clock->begin();
   // setup the gif library
   _gif.begin(LITTLE_ENDIAN_PIXELS);
   // setup the configuration menu
@@ -170,6 +178,10 @@ void SystemController::setupCli() {
           display::matrix::Matrix::setBrightness(display::matrix::brightness);
           if (_mqtt) _mqtt->publishLightState();
         }
+        auto* text = std::get_if<std::string*>(&setting.value);
+        if (text && *text == &application::clock::ntp_timezone) {
+          application::clock::Clock::applyTimezone();
+        }
       },
       std::move(actions));
   _cli->begin();
@@ -230,16 +242,20 @@ void SystemController::applicationLoop() {
     runUpdate();
     return;
   }
-  if (!keepRendering()) return;
+  if (!keepRendering()) {
+    // Avoid spinning while nothing is rendered, e.g. with the matrix off
+    delay(10);
+    return;
+  }
 
   // Until the time is synced, e.g. without network, no date is shown
   bool synced = _clock->synced();
-  display::matrix::Matrix::printClock(synced ? _clock->dateTime("H:i")
+  display::matrix::Matrix::printClock(synced ? _clock->format("%H:%M")
                                              : String("--:--"));
   wait(SHOW_APPLICATION_MS);
   if (!keepRendering()) return;
   if (synced) {
-    display::matrix::Matrix::printDate(_clock->dateTime("d.M.Y"));
+    display::matrix::Matrix::printDate(_clock->format("%d.%b.%Y"));
     wait(SHOW_APPLICATION_MS);
   }
   // GIFs are only available with a SD card

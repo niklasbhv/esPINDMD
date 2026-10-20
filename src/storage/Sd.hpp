@@ -112,9 +112,12 @@ inline bool mounted = false;
 class Sd {
  private:
   GifIndex _index;
+  // Whether the default pins of the board were used as a fallback
+  bool _default_pins = false;
 
  public:
   bool begin();
+  bool restoreWorkingPins();
   bool indexGifs(const IndexProgress& progress);
   uint32_t gifCount() const;
   static bool available();

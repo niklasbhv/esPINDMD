@@ -31,7 +31,7 @@ The available environments are `esp32dev`, `sparkfun_esp32_iot_redboard`, `esp32
 
 The esPINDMD can be set up in two ways, which can also be combined:
 
-- **Wi-Fi setup portal**: Without a configured network, the esPINDMD opens the Wi-Fi network `esPINDMD` (password `pinball12345`) for 180 seconds and shows its details on the matrix. Connect to it and open `http://192.168.4.1` to select a network.
+- **Wi-Fi setup portal**: Without a configured network, the esPINDMD opens the Wi-Fi network `esPINDMD-xxxxxx` for 180 seconds, where `xxxxxx` is the end of its MAC address. The password is generated randomly on every boot and shown on the matrix as well as on the serial console. Connect to it and open `http://192.168.4.1` to select a network.
 - **Serial console**: The menu described below is available a few seconds after powering on, also while the setup portal is open. This includes the Wi-Fi credentials (`network/wifi`) as well as the pins of the matrix and the SD card.
 
 GIFs are played from the `gif` directory of the SD card, including all sub directories. On every boot, the esPINDMD creates an index of all GIFs (`gif/.index`), which is used to play them in random order. Setting `application/gif/random` to `off` plays them in the order of the index instead. Without a SD card, the esPINDMD runs as a clock only.
@@ -55,6 +55,8 @@ Current value: 90, allowed: 0-255
 Enter the new value, an empty line keeps the current one
 brightness> 120
 ```
+
+The time zone (`application/clock/ntp/timezone`) is set as a POSIX time zone string, e.g. `CET-1CEST,M3.5.0,M10.5.0/3` for central Europe. The strings for all regions can be found in the [POSIX time zone database](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv).
 
 Entries are selected by their number. Changes to the colour of the clock and the brightness are applied immediately, other changes take effect after saving (`s`) and rebooting (`r`). Besides the settings, the menu offers actions to reset the Wi-Fi credentials (`network/wifi/reset`) and to check for and install firmware updates (`update/check`, `update/install`).
 
