@@ -1,5 +1,9 @@
 <p align="center">
-    <img src="/images/esPINDMD_logo.png">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo-dark.png">
+        <source media="(prefers-color-scheme: light)" srcset="assets/logo/logo-light.png">
+        <img alt="esPINDMD" src="assets/logo/logo-light.png">
+    </picture>
 </p>
 
 esPINDMD is a clock and GIF player combination for playing Pinball animations.
