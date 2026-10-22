@@ -101,13 +101,14 @@ void Matrix::setCenteredCursorPosition(const String &text) {
  * Shows the logo centered on the matrix, cut off on smaller matrices
  */
 void Matrix::printLogo() {
-  int16_t offset_x = (static_cast<int16_t>(panel_width) - LOGO_WIDTH) / 2;
-  int16_t offset_y = (static_cast<int16_t>(panel_height) - LOGO_HEIGHT) / 2;
-  for (int16_t y = 0; y < LOGO_HEIGHT; y++) {
-    for (int16_t x = 0; x < LOGO_WIDTH; x++) {
-      drawPixel(offset_x + x, offset_y + y, esPINDMD_logo[y * LOGO_WIDTH + x]);
-    }
-  }
+  int16_t x = (static_cast<int16_t>(panel_width) - logo::WIDTH) / 2;
+  int16_t y = (static_cast<int16_t>(panel_height) - logo::HEIGHT) / 2;
+  dma_display->clearScreen();
+  // One layer per colour, the rest of the screen stays black
+  dma_display->drawBitmap(x, y, logo::WHITE_LAYER.data(), logo::WIDTH,
+                          logo::HEIGHT, logo::WHITE);
+  dma_display->drawBitmap(x, y, logo::RED_LAYER.data(), logo::WIDTH,
+                          logo::HEIGHT, logo::RED);
 }
 
 /**

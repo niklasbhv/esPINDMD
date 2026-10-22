@@ -49,7 +49,6 @@ void SystemController::begin() {
     display::matrix::Matrix::printLines(
         {"Indexed GIFs", String(_sd->gifCount())});
     delay(NOTICE_MS);
-    display::matrix::Matrix::clearScreen();
     display::matrix::Matrix::printLogo();
   }
   // setup the Wi-Fi configuration, the setup portal runs in the background
