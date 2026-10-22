@@ -1,3 +1,3 @@
 # Data Models
 
-This directory is intended for data models of esPINDMD
+This directory is intended for data models of esPINDMD.

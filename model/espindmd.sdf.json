@@ -1,0 +1,107 @@
+{
+  "info": {
+    "title": "esPINDMD SDF (Semantic Definition Format) model",
+    "version": "2026-10-22",
+    "copyright": "Copyright 2026 Niklas Meyer. All rights reserved.",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0"
+  },
+  "namespace": {
+    "espindmd": "https://github.com/niklasbhv/esPINDMD"
+  },
+  "defaultNamespace": "espindmd",
+  "sdfThing": {
+    "esPINDMD": {
+      "label": "esPINDMD",
+      "description": "Clock and GIF player for pinball animations, driving a HUB75 LED matrix",
+      "sdfObject": {
+        "matrix": {
+          "label": "Matrix",
+          "description": "LED matrix showing the clock, the date and the GIFs",
+          "sdfProperty": {
+            "on": {
+              "label": "On",
+              "description": "Whether the matrix is turned on, playback stops while it is off",
+              "type": "boolean",
+              "writable": true,
+              "observable": true,
+              "nullable": false
+            },
+            "brightness": {
+              "label": "Brightness",
+              "description": "Brightness of the matrix",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "default": 90,
+              "writable": true,
+              "observable": true,
+              "nullable": false
+            }
+          }
+        },
+        "firmware": {
+          "label": "Firmware",
+          "description": "Firmware of the device, updated over the air",
+          "sdfProperty": {
+            "installedVersion": {
+              "label": "Installed version",
+              "description": "Version of the running firmware",
+              "type": "string",
+              "writable": false,
+              "observable": true,
+              "nullable": false
+            },
+            "latestVersion": {
+              "label": "Latest version",
+              "description": "Version of the latest release, equals the installed version until a release is known",
+              "type": "string",
+              "writable": false,
+              "observable": true,
+              "nullable": false
+            },
+            "releaseUrl": {
+              "label": "Release URL",
+              "description": "Link to the release notes of the latest release",
+              "type": "string",
+              "format": "uri",
+              "writable": false,
+              "observable": true
+            },
+            "releaseSummary": {
+              "label": "Release summary",
+              "description": "Short summary of the latest release",
+              "type": "string",
+              "writable": false,
+              "observable": true
+            },
+            "inProgress": {
+              "label": "In progress",
+              "description": "Whether an update is being installed",
+              "type": "boolean",
+              "writable": false,
+              "observable": true,
+              "nullable": false
+            },
+            "updatePercentage": {
+              "label": "Update percentage",
+              "description": "Progress of the running update, null if no update is in progress",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "unit": "%",
+              "writable": false,
+              "observable": true,
+              "nullable": true
+            }
+          },
+          "sdfAction": {
+            "install": {
+              "label": "Install",
+              "description": "Install the latest firmware, the device restarts on success"
+            }
+          }
+        }
+      }
+    }
+  }
+}
