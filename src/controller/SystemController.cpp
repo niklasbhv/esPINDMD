@@ -39,9 +39,10 @@ void SystemController::begin() {
   // setup the matrix configuration
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
-  // Index the GIFs, showing the number of indexed GIFs on the matrix
+  // Index the GIFs if they changed, showing the number of indexed GIFs on
+  // the matrix
   if (_sd->available()) {
-    display::matrix::Matrix::printLines({"Indexing GIFs", "0"});
+    display::matrix::Matrix::printLines({"Checking GIFs"});
     _sd->indexGifs([](uint32_t count) {
       if (count % INDEX_PROGRESS_STEP != 0) return;
       display::matrix::Matrix::printLines({"Indexing GIFs", String(count)});

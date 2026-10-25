@@ -38,7 +38,7 @@ The esPINDMD can be set up in two ways, which can also be combined:
 - **Wi-Fi setup portal**: Without a configured network, the esPINDMD opens the Wi-Fi network `esPINDMD-xxxxxx` for 180 seconds, where `xxxxxx` is the end of its MAC address. The password is generated randomly on every boot and shown on the matrix as well as on the serial console. Connect to it and open `http://192.168.4.1` to select a network.
 - **Serial console**: The menu described below is available a few seconds after powering on, also while the setup portal is open. This includes the Wi-Fi credentials (`network/wifi`) as well as the pins of the matrix and the SD card.
 
-GIFs are played from the `gif` directory of the SD card, including all sub directories. On every boot, the esPINDMD creates an index of all GIFs (`gif/.index`), which is used to play them in random order. Setting `application/gif/random` to `off` plays them in the order of the index instead. Without a SD card, the esPINDMD runs as a clock only.
+GIFs are played from the `gif` directory of the SD card, including all sub directories. The esPINDMD keeps an index of all GIFs (`.gifindex` in the root of the SD card), which is rebuilt on boot whenever the `gif` directory changed and is used to play them in random order. Setting `application/gif/random` to `off` plays them in the order of the index instead. Without a SD card, the esPINDMD runs as a clock only.
 
 ## Configuration
 

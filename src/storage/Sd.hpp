@@ -42,16 +42,49 @@ inline bool play_random = true;
 constexpr size_t MAX_FILENAME_LENGTH = 256;
 // Directory containing the GIF files, including all sub directories
 constexpr const char* GIF_ROOT_PATH = "/gif";
-// Index of all GIF files, hidden so it is skipped while indexing
-constexpr const char* INDEX_PATH = "/gif/.index";
-constexpr const char* INDEX_TMP_PATH = "/gif/.index.tmp";
+// Index of all GIF files, kept outside of the GIF directory so writing it
+// does not change the signature of the GIF directory
+constexpr const char* INDEX_PATH = "/.gifindex";
+constexpr const char* INDEX_TMP_PATH = "/.gifindex.tmp";
+// Location of the index in previous versions, removed when indexing
+constexpr const char* LEGACY_INDEX_PATH = "/gif/.index";
+constexpr const char* LEGACY_INDEX_TMP_PATH = "/gif/.index.tmp";
 // Every path is stored as a fixed size record, so the n-th path is found
-// with a single seek
+// with a single seek. The first record is the header of the index.
 constexpr size_t INDEX_RECORD_LENGTH = 256;
+// Identifies an index with a header, change it if the format changes
+constexpr char INDEX_MAGIC[8] = {'E', 'S', 'P', 'I', 'D', 'X', '0', '2'};
 // Number of recently played GIFs that are not picked again randomly
 constexpr size_t RECENT_COUNT = 16;
 // SPI clock speed, this is optimized for stability
 constexpr uint32_t SPI_CLOCK = SD_SCK_MHZ(4);
+
+/**
+ * Signature of the GIF directory, built from the directory entries of all
+ * files and sub directories. Used to detect whether the index needs to be
+ * rebuilt. The file names are not part of it, as reading the long file
+ * name of every entry is slow, so a file renamed in place is not detected.
+ */
+struct IndexSignature {
+  uint32_t entries = 0;
+  // FNV-1a hash
+  uint32_t hash = 2166136261u;
+
+  void add(FsFile& entry);
+  bool operator==(const IndexSignature& other) const {
+    return entries == other.entries && hash == other.hash;
+  }
+};
+
+/**
+ * Header stored in the first record of the index
+ */
+struct IndexHeader {
+  char magic[sizeof(INDEX_MAGIC)];
+  IndexSignature signature;
+};
+static_assert(sizeof(IndexHeader) <= INDEX_RECORD_LENGTH,
+              "The index header has to fit into a single record");
 
 /**
  * Iterates over all GIF files of a directory and its sub directories,
@@ -90,6 +123,9 @@ class GifIndex {
   void remember(uint32_t record);
 
  public:
+  static bool readSignature(IndexSignature& signature);
+  static IndexSignature scan();
+  static bool upToDate();
   static bool build(const IndexProgress& progress);
   bool open();
   uint32_t count() const;

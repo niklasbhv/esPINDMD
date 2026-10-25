@@ -117,14 +117,14 @@ bool Sd::replaceFile(const char* source, const char* target) {
 }
 
 /**
- * Function used to rebuild the GIF index and open it. If building fails,
- * the previous index is used.
+ * Function used to open the GIF index, it is only rebuilt if the GIF files
+ * changed since it was built. If building fails, the previous index is used.
  *
- * @param progress Invoked with the number of indexed files
+ * @param progress Invoked with the number of indexed files while building
  */
 bool Sd::indexGifs(const IndexProgress& progress) {
   if (!mounted) return false;
-  GifIndex::build(progress);
+  if (!GifIndex::upToDate()) GifIndex::build(progress);
   return _index.open();
 }
 
@@ -147,11 +147,107 @@ bool Sd::next(String& file_path) {
 }
 
 /**
+ * Function used to add a directory entry to the signature, only fields
+ * that are stored in the entry itself are used so no extra reads are needed
+ */
+void IndexSignature::add(FsFile& entry) {
+  auto mix = [this](const void* data, size_t length) {
+    const uint8_t* bytes = static_cast<const uint8_t*>(data);
+    for (size_t i = 0; i < length; i++) {
+      hash = (hash ^ bytes[i]) * 16777619u;
+    }
+  };
+  uint8_t is_dir = entry.isDir();
+  uint64_t size = entry.fileSize();
+  uint32_t dir_index = entry.dirIndex();
+  uint32_t cluster = entry.firstCluster();
+  uint16_t date = 0;
+  uint16_t time = 0;
+  entry.getModifyDateTime(&date, &time);
+  mix(&is_dir, sizeof(is_dir));
+  mix(&size, sizeof(size));
+  mix(&dir_index, sizeof(dir_index));
+  mix(&cluster, sizeof(cluster));
+  mix(&date, sizeof(date));
+  mix(&time, sizeof(time));
+  entries++;
+}
+
+/**
+ * Function used to add all entries of a directory and its sub directories
+ * to the signature
+ */
+static void scanDirectory(FsFile& dir, IndexSignature& signature) {
+  FsFile entry;
+  while (entry.openNext(&dir, O_RDONLY)) {
+    signature.add(entry);
+    // The opened entry is used directly, so the name is never needed
+    if (entry.isDir()) scanDirectory(entry, signature);
+    entry.close();
+  }
+}
+
+/**
+ * Function used to read the signature stored in the header of the index
+ *
+ * @return false if there is no valid index
+ */
+bool GifIndex::readSignature(IndexSignature& signature) {
+  FsFile index;
+  if (!index.open(INDEX_PATH, O_RDONLY)) return false;
+  IndexHeader header;
+  bool ok = index.read(&header, sizeof(header)) == sizeof(header) &&
+            memcmp(header.magic, INDEX_MAGIC, sizeof(INDEX_MAGIC)) == 0 &&
+            index.size() % INDEX_RECORD_LENGTH == 0;
+  index.close();
+  if (ok) signature = header.signature;
+  return ok;
+}
+
+/**
+ * Function used to build the signature of the GIF directory, this only
+ * reads the directory entries and is much faster than building the index
+ */
+IndexSignature GifIndex::scan() {
+  IndexSignature signature;
+  FsFile dir;
+  if (dir.open(GIF_ROOT_PATH, O_RDONLY)) {
+    scanDirectory(dir, signature);
+    dir.close();
+  }
+  return signature;
+}
+
+/**
+ * Function used to check whether the index matches the current GIF files
+ */
+bool GifIndex::upToDate() {
+  IndexSignature stored;
+  if (!readSignature(stored)) {
+    Serial.println("SD: No valid GIF index found");
+    return false;
+  }
+  Serial.println("SD: Checking the GIF index...");
+  uint32_t start = millis();
+  bool up_to_date = scan() == stored;
+  Serial.printf("SD: Checked %lu entries in %lu ms, the index is %s\r\n",
+                static_cast<unsigned long>(stored.entries),
+                static_cast<unsigned long>(millis() - start),
+                up_to_date ? "up to date" : "outdated");
+  return up_to_date;
+}
+
+/**
  * Function used to write the paths of all GIFs into the index
  */
 bool GifIndex::build(const IndexProgress& progress) {
   Serial.println("SD: Indexing GIFs...");
   uint32_t start = millis();
+  // Removing the old index changes the GIF directory, so it is done before
+  // the signature is taken
+  if (sd.exists(LEGACY_INDEX_PATH)) sd.remove(LEGACY_INDEX_PATH);
+  if (sd.exists(LEGACY_INDEX_TMP_PATH)) sd.remove(LEGACY_INDEX_TMP_PATH);
+  IndexSignature signature = scan();
   FsFile index;
   if (!index.open(INDEX_TMP_PATH, O_WRONLY | O_CREAT | O_TRUNC)) {
     Serial.println("SD: Failed to create the index");
@@ -162,8 +258,11 @@ bool GifIndex::build(const IndexProgress& progress) {
   String path;
   uint32_t count = 0;
   char record[INDEX_RECORD_LENGTH];
-  bool ok = true;
-  while (iterator.next(path)) {
+  // Reserve the header, it is written once the signature is known
+  memset(record, 0, sizeof(record));
+  bool ok = index.write(record, sizeof(record)) == sizeof(record);
+  if (progress) progress(count);
+  while (ok && iterator.next(path)) {
     if (path.length() >= INDEX_RECORD_LENGTH) {
       Serial.printf("SD: Skipping %s, the path is too long\r\n", path.c_str());
       continue;
@@ -177,6 +276,12 @@ bool GifIndex::build(const IndexProgress& progress) {
     count++;
     if (progress) progress(count);
   }
+
+  IndexHeader header;
+  memcpy(header.magic, INDEX_MAGIC, sizeof(INDEX_MAGIC));
+  header.signature = signature;
+  ok = ok && index.seekSet(0) &&
+       index.write(&header, sizeof(header)) == sizeof(header);
 
   // Closing flushes the file, a failure means the data is not on the card
   ok = index.close() && ok;
@@ -198,11 +303,13 @@ bool GifIndex::open() {
   _count = 0;
   _position = 0;
   _recent_size = 0;
-  if (!_file.open(INDEX_PATH, O_RDONLY)) {
+  IndexSignature signature;
+  if (!readSignature(signature) || !_file.open(INDEX_PATH, O_RDONLY)) {
     Serial.println("SD: No GIF index available");
     return false;
   }
-  _count = _file.size() / INDEX_RECORD_LENGTH;
+  // The first record is the header
+  _count = _file.size() / INDEX_RECORD_LENGTH - 1;
   return true;
 }
 
@@ -232,7 +339,9 @@ void GifIndex::rewind() { _position = 0; }
 
 bool GifIndex::read(uint32_t record, String& path) {
   char buffer[INDEX_RECORD_LENGTH];
-  if (!_file.seekSet(static_cast<uint64_t>(record) * INDEX_RECORD_LENGTH) ||
+  // Skip the header
+  uint64_t offset = (static_cast<uint64_t>(record) + 1) * INDEX_RECORD_LENGTH;
+  if (!_file.seekSet(offset) ||
       _file.read(buffer, sizeof(buffer)) != sizeof(buffer)) {
     Serial.println("SD: Failed to read the index");
     return false;
