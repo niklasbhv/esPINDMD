@@ -59,7 +59,9 @@ static JsonVariant create(JsonDocument& doc, const char* path) {
       segment += *c;
     }
   }
-  return node[segment];
+  // Converting the member proxy directly would return an unbound variant
+  // for a missing key, so the value could never be set
+  return node[segment].to<JsonVariant>();
 }
 
 /**
@@ -99,22 +101,29 @@ static void fromJson(const JsonDocument& doc) {
 
 /**
  * Function used to write all settings into a JSON document
+ *
+ * @return false if a setting could not be written, e.g. out of memory
  */
-static void toJson(JsonDocument& doc) {
+static bool toJson(JsonDocument& doc) {
   doc.to<JsonObject>();
+  bool ok = true;
   for (size_t i = 0; i < settings::count; i++) {
     const settings::Setting& setting = settings::all[i];
     JsonVariant target = create(doc, setting.path);
-    std::visit([&target](auto* value) { target.set(*value); }, setting.value);
+    std::visit([&target, &ok](auto* value) { ok = target.set(*value) && ok; },
+               setting.value);
   }
+  return ok && !doc.overflowed();
 }
 
 /**
  * Function used to serialize all settings into a compact JSON string
+ *
+ * @return an empty string if the settings could not be serialized
  */
 static std::string serialize() {
   JsonDocument doc;
-  toJson(doc);
+  if (!toJson(doc)) return std::string();
   std::string json;
   serializeJson(doc, json);
   return json;
@@ -202,7 +211,7 @@ bool Configuration::importFromSd() {
   fromJson(doc);
   std::string after = serialize();
   // Only write the internal flash if something changed
-  if (before != after) {
+  if (!after.empty() && before != after) {
     Serial.println("Configuration: Imported the configuration file");
     saveToNvs(after);
   }
@@ -212,7 +221,11 @@ bool Configuration::importFromSd() {
 bool Configuration::save() {
   Serial.println("Configuration: Saving configuration...");
   JsonDocument doc;
-  toJson(doc);
+  // An incomplete document would replace the stored values with defaults
+  if (!toJson(doc)) {
+    Serial.println("Configuration: Failed to serialize, not saving");
+    return false;
+  }
   std::string json;
   serializeJson(doc, json);
 
