@@ -70,6 +70,22 @@
             }
           }
         },
+        "gif": {
+          "label": "GIF",
+          "description": "Playback of the GIFs stored on the SD card",
+          "sdfProperty": {
+            "order": {
+              "label": "Order",
+              "description": "Order in which the GIFs are played, sequential plays them in the order of the index",
+              "type": "string",
+              "enum": ["Random", "Sequential"],
+              "default": "Random",
+              "writable": true,
+              "observable": true,
+              "nullable": false
+            }
+          }
+        },
         "firmware": {
           "label": "Firmware",
           "description": "Firmware of the device, updated over the air",

@@ -125,6 +125,13 @@ void SystemController::setupMqtt() {
                               application::clock::colour_b}};
   };
   handlers.on_install = [this]() { _ota.requestInstall(); };
+  handlers.on_gif_order = [this](bool random) {
+    if (random == storage::sd::play_random) return;
+    storage::sd::play_random = random;
+    _config_changed_at = millis();
+    _config_dirty = true;
+  };
+  handlers.get_gif_random = []() { return storage::sd::play_random; };
   handlers.get_update_state = [this]() {
     const update::ota::Release& latest = _ota.latest();
     network::mqtt::UpdateState state;
@@ -194,6 +201,10 @@ void SystemController::setupCli() {
                       *value == &application::clock::colour_g ||
                       *value == &application::clock::colour_b)) {
           if (_mqtt) _mqtt->publishLightState();
+        }
+        auto* flag = std::get_if<bool*>(&setting.value);
+        if (flag && *flag == &storage::sd::play_random) {
+          if (_mqtt) _mqtt->publishGifOrderState();
         }
         auto* text = std::get_if<std::string*>(&setting.value);
         if (text && *text == &application::clock::ntp_timezone) {

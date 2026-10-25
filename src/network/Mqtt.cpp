@@ -46,6 +46,8 @@ void Mqtt::begin() {
   _light_command_topic = base + "/matrix/set";
   _update_state_topic = base + "/update/state";
   _update_command_topic = base + "/update/install";
+  _gif_order_state_topic = base + "/gif/order/state";
+  _gif_order_command_topic = base + "/gif/order/set";
 
   _server = server;
   _mqtt_client.setServer(_server.c_str(), port);
@@ -82,8 +84,10 @@ bool Mqtt::connect() {
   _mqtt_client.publish(_availability_topic.c_str(), "online", true);
   _mqtt_client.subscribe(_light_command_topic.c_str());
   _mqtt_client.subscribe(_update_command_topic.c_str());
+  _mqtt_client.subscribe(_gif_order_command_topic.c_str());
   publishLightState();
   publishUpdateState();
+  publishGifOrderState();
   return true;
 }
 
@@ -125,7 +129,8 @@ void Mqtt::addDevice(JsonDocument& doc) {
 /**
  * Function used to publish the Home Assistant discovery of all entities
  * see https://www.home-assistant.io/integrations/light.mqtt/#json-schema
- * and https://www.home-assistant.io/integrations/update.mqtt/
+ * https://www.home-assistant.io/integrations/update.mqtt/
+ * and https://www.home-assistant.io/integrations/select.mqtt/
  */
 void Mqtt::publishDiscovery() {
   std::string payload;
@@ -166,6 +171,26 @@ void Mqtt::publishDiscovery() {
           (prefix + "/update/" + _node_id + "/firmware/config").c_str(),
           payload.c_str(), true)) {
     Serial.println("MQTT: Failed to publish update discovery!");
+  }
+
+  // Order of the GIFs as select
+  JsonDocument gif_order;
+  addDevice(gif_order);
+  gif_order["name"] = "GIF order";
+  gif_order["unique_id"] = _node_id + "_gif_order";
+  gif_order["entity_category"] = "config";
+  gif_order["icon"] = "mdi:shuffle-variant";
+  gif_order["availability_topic"] = _availability_topic;
+  gif_order["state_topic"] = _gif_order_state_topic;
+  gif_order["command_topic"] = _gif_order_command_topic;
+  gif_order["options"].add(GIF_ORDER_RANDOM);
+  gif_order["options"].add(GIF_ORDER_SEQUENTIAL);
+  payload.clear();
+  serializeJson(gif_order, payload);
+  if (!_mqtt_client.publish(
+          (prefix + "/select/" + _node_id + "/gif_order/config").c_str(),
+          payload.c_str(), true)) {
+    Serial.println("MQTT: Failed to publish GIF order discovery!");
   }
 }
 
@@ -217,6 +242,16 @@ void Mqtt::publishUpdateState() {
 }
 
 /**
+ * Function used to publish the current order of the GIFs
+ */
+void Mqtt::publishGifOrderState() {
+  if (!_mqtt_client.connected()) return;
+  const char* state =
+      _handlers.get_gif_random() ? GIF_ORDER_RANDOM : GIF_ORDER_SEQUENTIAL;
+  _mqtt_client.publish(_gif_order_state_topic.c_str(), state, true);
+}
+
+/**
  * Callback invoked whenever a message gets published to a subscribed topic
  */
 void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
@@ -227,6 +262,15 @@ void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
         memcmp(payload, PAYLOAD_INSTALL, length) == 0) {
       _handlers.on_install();
     }
+  } else if (_gif_order_command_topic == topic) {
+    std::string option(reinterpret_cast<char*>(payload), length);
+    if (option == GIF_ORDER_RANDOM || option == GIF_ORDER_SEQUENTIAL) {
+      _handlers.on_gif_order(option == GIF_ORDER_RANDOM);
+    } else {
+      Serial.printf("MQTT: Invalid GIF order: %s\r\n", option.c_str());
+    }
+    // Confirm the state, this also resets an invalid selection
+    publishGifOrderState();
   }
 }
 

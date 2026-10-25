@@ -44,6 +44,9 @@ constexpr uint32_t MAX_RECONNECT_INTERVAL_MS = 5 * 60 * 1000;
 constexpr size_t BUFFER_SIZE = 1024;
 // Payload Home Assistant sends to start an update
 constexpr const char* PAYLOAD_INSTALL = "install";
+// Options of the GIF order select
+constexpr const char* GIF_ORDER_RANDOM = "Random";
+constexpr const char* GIF_ORDER_SEQUENTIAL = "Sequential";
 
 /**
  * Colour of the text shown on the matrix
@@ -94,12 +97,16 @@ struct Handlers {
   std::function<LightState()> get_light_state;
   std::function<void()> on_install;
   std::function<UpdateState()> get_update_state;
+  // Whether the GIFs are played in random order instead of sequentially
+  std::function<void(bool random)> on_gif_order;
+  std::function<bool()> get_gif_random;
 };
 
 /**
  * MQTT component exposing the matrix as a Home Assistant light
- * (JSON schema) with on/off, brightness and text colour support and the
- * firmware as a Home Assistant update entity.
+ * (JSON schema) with on/off, brightness and text colour support, the
+ * order of the GIFs as a select entity and the firmware as a Home
+ * Assistant update entity.
  */
 class Mqtt {
  private:
@@ -118,6 +125,8 @@ class Mqtt {
   std::string _light_command_topic;
   std::string _update_state_topic;
   std::string _update_command_topic;
+  std::string _gif_order_state_topic;
+  std::string _gif_order_command_topic;
 
   bool connect();
   void addDevice(JsonDocument& doc);
@@ -131,6 +140,7 @@ class Mqtt {
   void loop();
   void publishLightState();
   void publishUpdateState();
+  void publishGifOrderState();
   bool connected();
 };
 
