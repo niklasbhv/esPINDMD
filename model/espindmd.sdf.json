@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "esPINDMD SDF (Semantic Definition Format) model",
-    "version": "2026-10-22",
+    "version": "2026-10-25",
     "copyright": "Copyright 2026 Niklas Meyer. All rights reserved.",
     "license": "https://www.apache.org/licenses/LICENSE-2.0"
   },
@@ -13,6 +13,11 @@
     "esPINDMD": {
       "label": "esPINDMD",
       "description": "Clock and GIF player for pinball animations, driving a HUB75 LED matrix",
+      "sdfRequired": [
+        "#/sdfThing/esPINDMD/sdfObject/matrix",
+        "#/sdfThing/esPINDMD/sdfObject/gif",
+        "#/sdfThing/esPINDMD/sdfObject/firmware"
+      ],
       "sdfObject": {
         "matrix": {
           "label": "Matrix",
@@ -28,7 +33,7 @@
             },
             "brightness": {
               "label": "Brightness",
-              "description": "Brightness of the matrix",
+              "description": "Brightness of the matrix, with a light sensor connected this is the brightness in bright light",
               "type": "integer",
               "minimum": 0,
               "maximum": 255,
@@ -82,6 +87,49 @@
               "default": "Random",
               "writable": true,
               "observable": true,
+              "nullable": false
+            }
+          }
+        },
+        "lightSensor": {
+          "label": "Light sensor",
+          "description": "Optional BH1750 ambient light sensor on the STEMMA QT / Qwiic port, used to dim the matrix. Only present if a sensor is detected on boot.",
+          "sdfRequired": [
+            "#/sdfThing/esPINDMD/sdfObject/lightSensor/sdfProperty/illuminance"
+          ],
+          "sdfProperty": {
+            "illuminance": {
+              "label": "Illuminance",
+              "description": "Smoothed ambient light, null until the first reading and while the sensor is not responding",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 54613,
+              "unit": "lx",
+              "writable": false,
+              "observable": true,
+              "nullable": true
+            },
+            "fullBrightnessIlluminance": {
+              "label": "Full brightness illuminance",
+              "description": "Ambient light at which the full brightness of the matrix is used, below it the matrix is dimmed logarithmically",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "unit": "lx",
+              "default": 300,
+              "writable": true,
+              "observable": false,
+              "nullable": false
+            },
+            "minimumBrightness": {
+              "label": "Minimum brightness",
+              "description": "Brightness of the matrix in the dark, limited to the brightness of the matrix",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "default": 10,
+              "writable": true,
+              "observable": false,
               "nullable": false
             }
           }

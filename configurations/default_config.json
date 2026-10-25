@@ -44,7 +44,10 @@
         "oe": 16,
         "clk": 15
       },
-      "brightness": 90
+      "brightness": 90,
+      "dimming": {
+        "min": 10
+      }
     }
   },
   "network": {
@@ -63,6 +66,16 @@
     "wifi": {
       "ssid": "",
       "password": ""
+    }
+  },
+  "sensor": {
+    "light": {
+      "enable": true,
+      "pins": {
+        "sda": 21,
+        "scl": 22
+      },
+      "lux": 300
     }
   },
   "storage": {

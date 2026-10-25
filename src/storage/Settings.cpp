@@ -23,6 +23,7 @@
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
 #include "storage/Sd.hpp"
+#include "sensor/LightSensor.hpp"
 #include "update/Ota.hpp"
 
 namespace storage::settings {
@@ -32,6 +33,7 @@ namespace matrix = display::matrix;
 namespace mqtt = network::mqtt;
 namespace wifi = network::wifi;
 namespace sd = storage::sd;
+namespace light = sensor::light;
 namespace ota = update::ota;
 
 // GPIO range covering the ESP32 and the ESP32-S3, -1 marks unused pins
@@ -69,6 +71,7 @@ Setting all[] = {
   {"display/matrix/pins/oe", &matrix::pins_oe, PIN_MIN, PIN_MAX, REBOOT, "HUB75 OE pin"},
   {"display/matrix/pins/clk", &matrix::pins_clk, PIN_MIN, PIN_MAX, REBOOT, "HUB75 CLK pin"},
   {"display/matrix/brightness", &matrix::brightness, 0, 255, NONE, "Brightness of the matrix"},
+  {"display/matrix/dimming/min", &matrix::dimming_min, 0, 255, NONE, "Brightness in the dark when a light sensor is connected"},
 
   // Network configuration
   {"network/mqtt/enable", &mqtt::enable, 0, 1, REBOOT, "Connect to a MQTT broker"},
@@ -79,6 +82,12 @@ Setting all[] = {
   {"network/mqtt/client/id", &mqtt::client_id, 0, 63, REBOOT, "MQTT client id, empty to derive it from the MAC"},
   {"network/wifi/ssid", &wifi::ssid, 0, 32, REBOOT, "Wi-Fi network, empty to use the setup portal"},
   {"network/wifi/password", &wifi::password, 0, 63, REBOOT | SECRET, "Wi-Fi password"},
+
+  // Sensor configuration
+  {"sensor/light/enable", &light::enable, 0, 1, REBOOT, "Dim the matrix using a BH1750 light sensor, if connected"},
+  {"sensor/light/pins/sda", &light::pins_sda, 0, PIN_MAX, REBOOT, "I2C SDA pin of the light sensor"},
+  {"sensor/light/pins/scl", &light::pins_scl, 0, PIN_MAX, REBOOT, "I2C SCL pin of the light sensor"},
+  {"sensor/light/lux", &light::full_lux, 1, 65535, NONE, "Ambient light in lux at which the full brightness is used"},
 
   // Storage configuration
   {"storage/sd/pins/mosi", &sd::pins_mosi, 0, PIN_MAX, REBOOT, "SD card MOSI pin"},

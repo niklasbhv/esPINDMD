@@ -18,6 +18,7 @@ esPINDMD supports the following features:
 - Wi-Fi support including support for a fully local setup
 - Support for MQTT including Home Assistant auto discovery
 - Support for over the air updates compatible with Home Assistant
+- Optional automatic dimming using a BH1750 light sensor
 
 ## Setup the development environment
 
@@ -118,6 +119,17 @@ The following pinouts are designed to be used with these boards as well as the A
 | MOSI      | GPIO19 | GPIO5    |         |
 | CLK       | GPIO18 | GPIO7    |         |
 | CS        | GPIO5  | GPIO4    |         |
+
+### Light Sensor
+
+A BH1750 light sensor, e.g. the [Adafruit BH1750](https://www.adafruit.com/product/4681), can be connected to the STEMMA QT / Qwiic port to dim the matrix based on the ambient light. The sensor is optional and detected on boot, without it the brightness stays fixed.
+
+| Light Sensor | ESP32 (IoT RedBoard) | ESP32-S3 (Metro) | Default      |
+|:------------:|:--------------------:|:----------------:|:------------:|
+| SDA          | GPIO21               | GPIO47           | SDA of board |
+| SCL          | GPIO22               | GPIO48           | SCL of board |
+
+With a sensor connected, `display/matrix/brightness` is used in bright light and the matrix is dimmed down to `display/matrix/dimming/min` in the dark. The full brightness is reached at `sensor/light/lux` lux (300 by default), lower values dim the matrix earlier. Setting `sensor/light/enable` to `off` ignores a connected sensor. If the I2C pins are already used by the matrix or the SD reader, the sensor is skipped.
 
 ## License
 

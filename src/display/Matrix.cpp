@@ -54,7 +54,7 @@ void Matrix::begin() {
   //  initialize the display
   dma_display = std::make_unique<MatrixPanel_I2S_DMA>(mxconfig);
   dma_display->begin();
-  dma_display->setBrightness8(power ? brightness : 0);
+  dma_display->setBrightness8(power ? outputBrightness() : 0);
   dma_display->clearScreen();
   Serial.println("Matrix: Initialized the matrix component!");
 }
@@ -66,7 +66,29 @@ void Matrix::clearScreen() { dma_display->clearScreen(); }
  */
 void Matrix::setBrightness(uint8_t value) {
   brightness = value;
-  if (power) dma_display->setBrightness8(brightness);
+  if (power) dma_display->setBrightness8(outputBrightness());
+}
+
+/**
+ * Sets the ambient light level used for dimming, 255 uses the brightness
+ * without dimming
+ */
+void Matrix::setAmbientLevel(uint8_t level) {
+  uint8_t before = outputBrightness();
+  _ambient_level = level;
+  // Changing the brightness rewrites the DMA buffers, so skip it if possible
+  if (power && outputBrightness() != before) {
+    dma_display->setBrightness8(outputBrightness());
+  }
+}
+
+/**
+ * Function used to get the brightness for the panel, scaled between the
+ * minimum and the configured brightness by the ambient light level
+ */
+uint8_t Matrix::outputBrightness() {
+  uint8_t low = std::min(dimming_min, brightness);
+  return low + (brightness - low) * _ambient_level / 255;
 }
 
 /**
@@ -75,7 +97,7 @@ void Matrix::setBrightness(uint8_t value) {
 void Matrix::setPower(bool on) {
   power = on;
   if (power) {
-    dma_display->setBrightness8(brightness);
+    dma_display->setBrightness8(outputBrightness());
   } else {
     dma_display->clearScreen();
     dma_display->setBrightness8(0);

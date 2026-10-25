@@ -39,6 +39,7 @@ void SystemController::begin() {
   // setup the matrix configuration
   display::matrix::Matrix::begin();
   display::matrix::Matrix::printLogo();
+  setupLightSensor();
   // Index the GIFs if they changed, showing the number of indexed GIFs on
   // the matrix
   if (_sd->available()) {
@@ -89,6 +90,35 @@ void SystemController::begin() {
     display::matrix::Matrix::printLines({"No SD card", "Clock only"});
     delay(NOTICE_MS);
   }
+}
+
+/**
+ * Function used to look for the optional light sensor. The I2C pins are
+ * only used if they do not collide with the matrix or the SD card, as
+ * starting the bus on them would break these.
+ */
+void SystemController::setupLightSensor() {
+  if (!sensor::light::enable) return;
+  namespace matrix = display::matrix;
+  namespace sd = storage::sd;
+  const int16_t used[] = {matrix::pins_r1, matrix::pins_g1,  matrix::pins_b1,
+                          matrix::pins_r2, matrix::pins_g2,  matrix::pins_b2,
+                          matrix::pins_a,  matrix::pins_b,   matrix::pins_c,
+                          matrix::pins_d,  matrix::pins_e,   matrix::pins_lat,
+                          matrix::pins_oe, matrix::pins_clk, sd::pins_miso,
+                          sd::pins_mosi,   sd::pins_clk,     sd::pins_cs};
+  for (int16_t pin : used) {
+    if (pin >= 0 &&
+        (pin == sensor::light::pins_sda || pin == sensor::light::pins_scl)) {
+      Serial.printf(
+          "SystemController: Light sensor pin %d is already in use, "
+          "continuing without it\r\n",
+          pin);
+      return;
+    }
+  }
+  _light = std::make_unique<sensor::light::LightSensor>();
+  if (!_light->begin()) _light.reset();
 }
 
 /**
@@ -304,6 +334,9 @@ void SystemController::systemLoop() {
   if (_cli) _cli->loop();
   if (_wifi) _wifi->loop();
   if (_mqtt) _mqtt->loop();
+  if (_light && _light->loop()) {
+    display::matrix::Matrix::setAmbientLevel(_light->level());
+  }
 
   if (_config_dirty && millis() - _config_changed_at >= SAVE_DELAY_MS) {
     _config_dirty = false;

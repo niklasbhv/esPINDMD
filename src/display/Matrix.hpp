@@ -36,6 +36,9 @@ inline uint16_t panel_height = 0;
 inline uint16_t panel_chain = 0;
 
 inline uint8_t brightness = 90;  // 0-255
+// Brightness in the dark when a light sensor dims the matrix, the
+// brightness above is used in bright light
+inline uint8_t dimming_min = 10;
 inline bool power = true;
 
 inline int8_t pins_r1 = 36;
@@ -59,6 +62,10 @@ inline std::unique_ptr<MatrixPanel_I2S_DMA> dma_display;
 
 class Matrix {
  private:
+  // Ambient light level from 0 (dark) to 255 (bright), used for dimming
+  static inline uint8_t _ambient_level = 255;
+
+  static uint8_t outputBrightness();
   static void setCenteredCursorPosition(const String& text);
   static uint16_t textColour();
   static void printCentered(const String& text, const GFXfont* font);
@@ -67,6 +74,7 @@ class Matrix {
   static void begin();
   static void clearScreen();
   static void setBrightness(uint8_t value);
+  static void setAmbientLevel(uint8_t level);
   static void setPower(bool on);
   static bool isOn();
   static void printClock(const String& time);

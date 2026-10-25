@@ -21,6 +21,7 @@
 #include "display/Matrix.hpp"
 #include "network/Mqtt.hpp"
 #include "network/Wifi.hpp"
+#include "sensor/LightSensor.hpp"
 #include "storage/Configuration.hpp"
 #include "storage/Sd.hpp"
 #include "update/Ota.hpp"
@@ -39,6 +40,8 @@ class SystemController {
   // Hardware components
   std::unique_ptr<storage::sd::Sd> _sd;
   std::unique_ptr<network::wifi::Wifi> _wifi;
+  // Optional, only set if a light sensor was found
+  std::unique_ptr<sensor::light::LightSensor> _light;
   // Software components
   std::unique_ptr<application::clock::Clock> _clock;
   std::unique_ptr<network::mqtt::Mqtt> _mqtt;
@@ -53,6 +56,7 @@ class SystemController {
   void wait(uint32_t ms);
   bool keepRendering();
   void runUpdate();
+  void setupLightSensor();
   void setupMqtt();
   void setupCli();
   bool healthy();
