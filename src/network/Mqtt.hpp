@@ -46,11 +46,21 @@ constexpr size_t BUFFER_SIZE = 1024;
 constexpr const char* PAYLOAD_INSTALL = "install";
 
 /**
+ * Colour of the text shown on the matrix
+ */
+struct Colour {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+};
+
+/**
  * State of the matrix as exposed to Home Assistant
  */
 struct LightState {
   bool on;
   uint8_t brightness;
+  Colour colour;
 };
 
 /**
@@ -60,6 +70,7 @@ struct LightState {
 struct LightCommand {
   std::optional<bool> on;
   std::optional<uint8_t> brightness;
+  std::optional<Colour> colour;
 };
 
 /**
@@ -87,8 +98,8 @@ struct Handlers {
 
 /**
  * MQTT component exposing the matrix as a Home Assistant light
- * (JSON schema) with on/off and brightness support and the firmware
- * as a Home Assistant update entity.
+ * (JSON schema) with on/off, brightness and text colour support and the
+ * firmware as a Home Assistant update entity.
  */
 class Mqtt {
  private:

@@ -36,6 +36,37 @@
               "writable": true,
               "observable": true,
               "nullable": false
+            },
+            "colour": {
+              "label": "Colour",
+              "description": "Colour of the text shown on the matrix, e.g. the clock and the date",
+              "type": "object",
+              "properties": {
+                "r": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "g": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "b": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "required": ["r", "g", "b"],
+              "default": {
+                "r": 231,
+                "g": 103,
+                "b": 3
+              },
+              "writable": true,
+              "observable": true,
+              "nullable": false
             }
           }
         },

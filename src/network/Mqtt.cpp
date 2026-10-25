@@ -131,7 +131,7 @@ void Mqtt::publishDiscovery() {
   std::string payload;
   std::string prefix = std::string(DISCOVERY_PREFIX);
 
-  // Matrix as light with on/off and brightness
+  // Matrix as light with on/off, brightness and the text colour
   JsonDocument light;
   addDevice(light);
   light["name"] = "Matrix";
@@ -140,7 +140,7 @@ void Mqtt::publishDiscovery() {
   light["availability_topic"] = _availability_topic;
   light["command_topic"] = _light_command_topic;
   light["state_topic"] = _light_state_topic;
-  light["supported_color_modes"].add("brightness");
+  light["supported_color_modes"].add("rgb");
   serializeJson(light, payload);
   // Retained, so Home Assistant picks up the device after a restart
   if (!_mqtt_client.publish(
@@ -179,7 +179,11 @@ void Mqtt::publishLightState() {
   JsonDocument doc;
   doc["state"] = state.on ? "ON" : "OFF";
   doc["brightness"] = state.brightness;
-  doc["color_mode"] = "brightness";
+  doc["color_mode"] = "rgb";
+  JsonObject colour = doc["color"].to<JsonObject>();
+  colour["r"] = state.colour.r;
+  colour["g"] = state.colour.g;
+  colour["b"] = state.colour.b;
 
   std::string payload;
   serializeJson(doc, payload);
@@ -228,7 +232,8 @@ void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
 
 /**
  * Function used to handle light commands.
- * Expects payloads like {"state": "ON", "brightness": 128}
+ * Expects payloads like
+ * {"state": "ON", "brightness": 128, "color": {"r": 255, "g": 0, "b": 0}}
  */
 void Mqtt::onLightCommand(uint8_t* payload, size_t length) {
   JsonDocument doc;
@@ -244,6 +249,13 @@ void Mqtt::onLightCommand(uint8_t* payload, size_t length) {
   }
   if (doc["brightness"].is<uint8_t>()) {
     command.brightness = doc["brightness"].as<uint8_t>();
+  }
+  JsonObject colour = doc["color"];
+  if (colour["r"].is<uint8_t>() && colour["g"].is<uint8_t>() &&
+      colour["b"].is<uint8_t>()) {
+    command.colour =
+        Colour{colour["r"].as<uint8_t>(), colour["g"].as<uint8_t>(),
+               colour["b"].as<uint8_t>()};
   }
   _handlers.on_light_command(command);
   // Confirm the new state, Home Assistant waits for it

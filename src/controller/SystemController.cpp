@@ -104,13 +104,24 @@ void SystemController::setupMqtt() {
           _config_changed_at = millis();
           _config_dirty = true;
         }
+        if (command.colour) {
+          // Used for all text, shown from the next redraw on
+          application::clock::colour_r = command.colour->r;
+          application::clock::colour_g = command.colour->g;
+          application::clock::colour_b = command.colour->b;
+          _config_changed_at = millis();
+          _config_dirty = true;
+        }
         if (command.on) {
           display::matrix::Matrix::setPower(*command.on);
         }
       };
   handlers.get_light_state = []() {
-    return network::mqtt::LightState{display::matrix::Matrix::isOn(),
-                                     display::matrix::brightness};
+    return network::mqtt::LightState{
+        display::matrix::Matrix::isOn(), display::matrix::brightness,
+        network::mqtt::Colour{application::clock::colour_r,
+                              application::clock::colour_g,
+                              application::clock::colour_b}};
   };
   handlers.on_install = [this]() { _ota.requestInstall(); };
   handlers.get_update_state = [this]() {
@@ -175,6 +186,12 @@ void SystemController::setupCli() {
         auto* value = std::get_if<uint8_t*>(&setting.value);
         if (value && *value == &display::matrix::brightness) {
           display::matrix::Matrix::setBrightness(display::matrix::brightness);
+          if (_mqtt) _mqtt->publishLightState();
+        }
+        // Keep Home Assistant in sync with the text colour
+        if (value && (*value == &application::clock::colour_r ||
+                      *value == &application::clock::colour_g ||
+                      *value == &application::clock::colour_b)) {
           if (_mqtt) _mqtt->publishLightState();
         }
         auto* text = std::get_if<std::string*>(&setting.value);
