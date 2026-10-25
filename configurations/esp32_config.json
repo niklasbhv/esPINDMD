@@ -46,6 +46,7 @@
       },
       "brightness": 90,
       "dimming": {
+        "enable": true,
         "min": 10
       }
     }

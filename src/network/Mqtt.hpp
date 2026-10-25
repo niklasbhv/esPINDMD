@@ -44,6 +44,12 @@ constexpr uint32_t MAX_RECONNECT_INTERVAL_MS = 5 * 60 * 1000;
 constexpr size_t BUFFER_SIZE = 1024;
 // Payload Home Assistant sends to start an update
 constexpr const char* PAYLOAD_INSTALL = "install";
+// Limits for publishing the illuminance, it is published if it changed by
+// the given fraction, but at most once per minimum and at least once per
+// maximum interval
+constexpr uint32_t ILLUMINANCE_MIN_INTERVAL_MS = 5000;
+constexpr uint32_t ILLUMINANCE_MAX_INTERVAL_MS = 5 * 60 * 1000;
+constexpr float ILLUMINANCE_CHANGE = 0.05f;
 // Options of the GIF order select
 constexpr const char* GIF_ORDER_RANDOM = "Random";
 constexpr const char* GIF_ORDER_SEQUENTIAL = "Sequential";
@@ -100,13 +106,19 @@ struct Handlers {
   // Whether the GIFs are played in random order instead of sequentially
   std::function<void(bool random)> on_gif_order;
   std::function<bool()> get_gif_random;
+  // Only set if a light sensor is connected. The illuminance is negative
+  // while the sensor provides no readings.
+  std::function<float()> get_illuminance;
+  std::function<void(bool enable)> on_auto_brightness;
+  std::function<bool()> get_auto_brightness;
 };
 
 /**
  * MQTT component exposing the matrix as a Home Assistant light
  * (JSON schema) with on/off, brightness and text colour support, the
  * order of the GIFs as a select entity and the firmware as a Home
- * Assistant update entity.
+ * Assistant update entity. With a light sensor connected, the illuminance
+ * is exposed as a sensor and the automatic brightness as a switch.
  */
 class Mqtt {
  private:
@@ -127,10 +139,19 @@ class Mqtt {
   std::string _update_command_topic;
   std::string _gif_order_state_topic;
   std::string _gif_order_command_topic;
+  std::string _illuminance_state_topic;
+  std::string _illuminance_availability_topic;
+  std::string _auto_brightness_state_topic;
+  std::string _auto_brightness_command_topic;
+  // Last published illuminance, negative if published as unavailable
+  float _published_lux = -1;
+  uint32_t _published_lux_at = 0;
+  bool _published_lux_once = false;
 
   bool connect();
   void addDevice(JsonDocument& doc);
   void publishDiscovery();
+  void publishLightSensorDiscovery(const std::string& prefix);
   void onMessage(char* topic, uint8_t* payload, size_t length);
   void onLightCommand(uint8_t* payload, size_t length);
 
@@ -141,6 +162,8 @@ class Mqtt {
   void publishLightState();
   void publishUpdateState();
   void publishGifOrderState();
+  void publishIlluminance(bool force = false);
+  void publishAutoBrightnessState();
   bool connected();
 };
 

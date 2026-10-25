@@ -16,6 +16,8 @@
 
 #include "Mqtt.hpp"
 
+#include <cmath>
+
 #include "update/Version.hpp"
 
 namespace network::mqtt {
@@ -48,6 +50,10 @@ void Mqtt::begin() {
   _update_command_topic = base + "/update/install";
   _gif_order_state_topic = base + "/gif/order/state";
   _gif_order_command_topic = base + "/gif/order/set";
+  _illuminance_state_topic = base + "/light_sensor/illuminance";
+  _illuminance_availability_topic = base + "/light_sensor/availability";
+  _auto_brightness_state_topic = base + "/matrix/auto_brightness/state";
+  _auto_brightness_command_topic = base + "/matrix/auto_brightness/set";
 
   _server = server;
   _mqtt_client.setServer(_server.c_str(), port);
@@ -85,9 +91,14 @@ bool Mqtt::connect() {
   _mqtt_client.subscribe(_light_command_topic.c_str());
   _mqtt_client.subscribe(_update_command_topic.c_str());
   _mqtt_client.subscribe(_gif_order_command_topic.c_str());
+  if (_handlers.get_illuminance) {
+    _mqtt_client.subscribe(_auto_brightness_command_topic.c_str());
+  }
   publishLightState();
   publishUpdateState();
   publishGifOrderState();
+  publishIlluminance(true);
+  publishAutoBrightnessState();
   return true;
 }
 
@@ -130,7 +141,9 @@ void Mqtt::addDevice(JsonDocument& doc) {
  * Function used to publish the Home Assistant discovery of all entities
  * see https://www.home-assistant.io/integrations/light.mqtt/#json-schema
  * https://www.home-assistant.io/integrations/update.mqtt/
- * and https://www.home-assistant.io/integrations/select.mqtt/
+ * https://www.home-assistant.io/integrations/select.mqtt/
+ * https://www.home-assistant.io/integrations/sensor.mqtt/
+ * and https://www.home-assistant.io/integrations/switch.mqtt/
  */
 void Mqtt::publishDiscovery() {
   std::string payload;
@@ -192,6 +205,62 @@ void Mqtt::publishDiscovery() {
           payload.c_str(), true)) {
     Serial.println("MQTT: Failed to publish GIF order discovery!");
   }
+
+  publishLightSensorDiscovery(prefix);
+}
+
+/**
+ * Function used to publish the discovery of the light sensor entities. As
+ * the sensor is optional, the entities are removed if it is not connected,
+ * otherwise they would stay in Home Assistant after removing the sensor.
+ */
+void Mqtt::publishLightSensorDiscovery(const std::string& prefix) {
+  std::string illuminance_topic =
+      prefix + "/sensor/" + _node_id + "/illuminance/config";
+  std::string auto_brightness_topic =
+      prefix + "/switch/" + _node_id + "/auto_brightness/config";
+  if (!_handlers.get_illuminance) {
+    // An empty retained payload removes the entity
+    _mqtt_client.publish(illuminance_topic.c_str(), "", true);
+    _mqtt_client.publish(auto_brightness_topic.c_str(), "", true);
+    return;
+  }
+
+  // Illuminance as sensor, unavailable while the sensor is not responding
+  JsonDocument illuminance;
+  addDevice(illuminance);
+  illuminance["name"] = "Illuminance";
+  illuminance["unique_id"] = _node_id + "_illuminance";
+  illuminance["device_class"] = "illuminance";
+  illuminance["state_class"] = "measurement";
+  illuminance["unit_of_measurement"] = "lx";
+  illuminance["suggested_display_precision"] = 0;
+  illuminance["availability_mode"] = "all";
+  illuminance["availability"][0]["topic"] = _availability_topic;
+  illuminance["availability"][1]["topic"] = _illuminance_availability_topic;
+  illuminance["state_topic"] = _illuminance_state_topic;
+  std::string payload;
+  serializeJson(illuminance, payload);
+  if (!_mqtt_client.publish(illuminance_topic.c_str(), payload.c_str(), true)) {
+    Serial.println("MQTT: Failed to publish illuminance discovery!");
+  }
+
+  // Automatic brightness as switch
+  JsonDocument auto_brightness;
+  addDevice(auto_brightness);
+  auto_brightness["name"] = "Auto brightness";
+  auto_brightness["unique_id"] = _node_id + "_auto_brightness";
+  auto_brightness["entity_category"] = "config";
+  auto_brightness["icon"] = "mdi:brightness-auto";
+  auto_brightness["availability_topic"] = _availability_topic;
+  auto_brightness["state_topic"] = _auto_brightness_state_topic;
+  auto_brightness["command_topic"] = _auto_brightness_command_topic;
+  payload.clear();
+  serializeJson(auto_brightness, payload);
+  if (!_mqtt_client.publish(auto_brightness_topic.c_str(), payload.c_str(),
+                            true)) {
+    Serial.println("MQTT: Failed to publish auto brightness discovery!");
+  }
 }
 
 /**
@@ -252,6 +321,48 @@ void Mqtt::publishGifOrderState() {
 }
 
 /**
+ * Function used to publish the illuminance of the light sensor. Changes are
+ * throttled, as the sensor is read every second.
+ *
+ * @param force Publish even if the illuminance barely changed
+ */
+void Mqtt::publishIlluminance(bool force) {
+  if (!_mqtt_client.connected() || !_handlers.get_illuminance) return;
+
+  float lux = _handlers.get_illuminance();
+  bool available = lux >= 0;
+  bool was_available = _published_lux >= 0;
+  uint32_t elapsed = millis() - _published_lux_at;
+  if (!force && _published_lux_once && available == was_available) {
+    if (!available) return;
+    float threshold = std::max(1.0f, _published_lux * ILLUMINANCE_CHANGE);
+    bool changed = std::fabs(lux - _published_lux) >= threshold;
+    if (elapsed < ILLUMINANCE_MIN_INTERVAL_MS) return;
+    if (!changed && elapsed < ILLUMINANCE_MAX_INTERVAL_MS) return;
+  }
+
+  if (available) {
+    char value[16];
+    snprintf(value, sizeof(value), "%.1f", lux);
+    _mqtt_client.publish(_illuminance_state_topic.c_str(), value, true);
+  }
+  _mqtt_client.publish(_illuminance_availability_topic.c_str(),
+                       available ? "online" : "offline", true);
+  _published_lux = available ? lux : -1;
+  _published_lux_at = millis();
+  _published_lux_once = true;
+}
+
+/**
+ * Function used to publish whether the automatic brightness is enabled
+ */
+void Mqtt::publishAutoBrightnessState() {
+  if (!_mqtt_client.connected() || !_handlers.get_auto_brightness) return;
+  _mqtt_client.publish(_auto_brightness_state_topic.c_str(),
+                       _handlers.get_auto_brightness() ? "ON" : "OFF", true);
+}
+
+/**
  * Callback invoked whenever a message gets published to a subscribed topic
  */
 void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
@@ -271,6 +382,13 @@ void Mqtt::onMessage(char* topic, uint8_t* payload, size_t length) {
     }
     // Confirm the state, this also resets an invalid selection
     publishGifOrderState();
+  } else if (_auto_brightness_command_topic == topic &&
+             _handlers.on_auto_brightness) {
+    std::string state(reinterpret_cast<char*>(payload), length);
+    if (state == "ON" || state == "OFF") {
+      _handlers.on_auto_brightness(state == "ON");
+    }
+    publishAutoBrightnessState();
   }
 }
 

@@ -85,7 +85,7 @@ uint8_t LightSensor::levelFor(float lux) const {
  * responding, e.g. it was unplugged, the full level is used until it
  * responds again. Needs to be called frequently.
  *
- * @return true if the level changed
+ * @return true if there is a new reading or the sensor stopped responding
  */
 bool LightSensor::loop() {
   uint32_t interval = _responding ? READ_INTERVAL_MS : RETRY_INTERVAL_MS;
@@ -105,19 +105,19 @@ bool LightSensor::loop() {
     Serial.println("LightSensor: Light sensor stopped responding");
     _responding = false;
     _lux = -1;
-    bool changed = _level != 255;
     _level = 255;
-    return changed;
+    return true;
   }
   _lux = _lux < 0 ? lux : _lux + (lux - _lux) * SMOOTHING;
 
   uint8_t level = levelFor(_lux);
   // The ends are always applied, so the full range is reachable
   bool end = (level == 0 || level == 255) && level != _level;
-  if (!end && abs(level - _level) < LEVEL_HYSTERESIS) return false;
-  _level = level;
+  if (end || abs(level - _level) >= LEVEL_HYSTERESIS) _level = level;
   return true;
 }
+
+bool LightSensor::responding() const { return _responding && _lux >= 0; }
 
 float LightSensor::lux() const { return _lux; }
 

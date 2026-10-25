@@ -39,6 +39,8 @@ inline uint8_t brightness = 90;  // 0-255
 // Brightness in the dark when a light sensor dims the matrix, the
 // brightness above is used in bright light
 inline uint8_t dimming_min = 10;
+// Dim the matrix based on the light sensor, if one is connected
+inline bool dimming_enable = true;
 inline bool power = true;
 
 inline int8_t pins_r1 = 36;

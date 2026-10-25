@@ -71,6 +71,7 @@ Setting all[] = {
   {"display/matrix/pins/oe", &matrix::pins_oe, PIN_MIN, PIN_MAX, REBOOT, "HUB75 OE pin"},
   {"display/matrix/pins/clk", &matrix::pins_clk, PIN_MIN, PIN_MAX, REBOOT, "HUB75 CLK pin"},
   {"display/matrix/brightness", &matrix::brightness, 0, 255, NONE, "Brightness of the matrix"},
+  {"display/matrix/dimming/enable", &matrix::dimming_enable, 0, 1, NONE, "Dim the matrix based on the light sensor"},
   {"display/matrix/dimming/min", &matrix::dimming_min, 0, 255, NONE, "Brightness in the dark when a light sensor is connected"},
 
   // Network configuration

@@ -67,6 +67,7 @@ class LightSensor {
  public:
   bool begin();
   bool loop();
+  bool responding() const;
   float lux() const;
   uint8_t level() const;
 };

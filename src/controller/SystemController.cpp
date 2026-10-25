@@ -162,6 +162,23 @@ void SystemController::setupMqtt() {
     _config_dirty = true;
   };
   handlers.get_gif_random = []() { return storage::sd::play_random; };
+  // The light sensor entities are only exposed if a sensor is connected
+  if (_light) {
+    handlers.get_illuminance = [this]() {
+      return _light->responding() ? _light->lux() : -1.0f;
+    };
+    handlers.on_auto_brightness = [this](bool enable) {
+      if (enable == display::matrix::dimming_enable) return;
+      display::matrix::dimming_enable = enable;
+      // Applies the brightness with or without dimming
+      display::matrix::Matrix::setBrightness(display::matrix::brightness);
+      _config_changed_at = millis();
+      _config_dirty = true;
+    };
+    handlers.get_auto_brightness = []() {
+      return display::matrix::dimming_enable;
+    };
+  }
   handlers.get_update_state = [this]() {
     const update::ota::Release& latest = _ota.latest();
     network::mqtt::UpdateState state;
@@ -226,6 +243,9 @@ void SystemController::setupCli() {
           display::matrix::Matrix::setBrightness(display::matrix::brightness);
           if (_mqtt) _mqtt->publishLightState();
         }
+        if (value && *value == &display::matrix::dimming_min) {
+          display::matrix::Matrix::setBrightness(display::matrix::brightness);
+        }
         // Keep Home Assistant in sync with the text colour
         if (value && (*value == &application::clock::colour_r ||
                       *value == &application::clock::colour_g ||
@@ -235,6 +255,10 @@ void SystemController::setupCli() {
         auto* flag = std::get_if<bool*>(&setting.value);
         if (flag && *flag == &storage::sd::play_random) {
           if (_mqtt) _mqtt->publishGifOrderState();
+        }
+        if (flag && *flag == &display::matrix::dimming_enable) {
+          display::matrix::Matrix::setBrightness(display::matrix::brightness);
+          if (_mqtt) _mqtt->publishAutoBrightnessState();
         }
         auto* text = std::get_if<std::string*>(&setting.value);
         if (text && *text == &application::clock::ntp_timezone) {
@@ -336,6 +360,7 @@ void SystemController::systemLoop() {
   if (_mqtt) _mqtt->loop();
   if (_light && _light->loop()) {
     display::matrix::Matrix::setAmbientLevel(_light->level());
+    if (_mqtt) _mqtt->publishIlluminance();
   }
 
   if (_config_dirty && millis() - _config_changed_at >= SAVE_DELAY_MS) {

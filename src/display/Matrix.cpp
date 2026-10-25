@@ -87,6 +87,7 @@ void Matrix::setAmbientLevel(uint8_t level) {
  * minimum and the configured brightness by the ambient light level
  */
 uint8_t Matrix::outputBrightness() {
+  if (!dimming_enable) return brightness;
   uint8_t low = std::min(dimming_min, brightness);
   return low + (brightness - low) * _ambient_level / 255;
 }

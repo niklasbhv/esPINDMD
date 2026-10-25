@@ -109,6 +109,15 @@
               "observable": true,
               "nullable": true
             },
+            "autoBrightness": {
+              "label": "Auto brightness",
+              "description": "Whether the matrix is dimmed based on the illuminance, otherwise the brightness of the matrix is used",
+              "type": "boolean",
+              "default": true,
+              "writable": true,
+              "observable": true,
+              "nullable": false
+            },
             "fullBrightnessIlluminance": {
               "label": "Full brightness illuminance",
               "description": "Ambient light at which the full brightness of the matrix is used, below it the matrix is dimmed logarithmically",

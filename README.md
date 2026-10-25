@@ -129,7 +129,7 @@ A BH1750 light sensor, e.g. the [Adafruit BH1750](https://www.adafruit.com/produ
 | SDA          | GPIO21               | GPIO47           | SDA of board |
 | SCL          | GPIO22               | GPIO48           | SCL of board |
 
-With a sensor connected, `display/matrix/brightness` is used in bright light and the matrix is dimmed down to `display/matrix/dimming/min` in the dark. The full brightness is reached at `sensor/light/lux` lux (300 by default), lower values dim the matrix earlier. Setting `sensor/light/enable` to `off` ignores a connected sensor. If the I2C pins are already used by the matrix or the SD reader, the sensor is skipped.
+With a sensor connected, `display/matrix/brightness` is used in bright light and the matrix is dimmed down to `display/matrix/dimming/min` in the dark. The full brightness is reached at `sensor/light/lux` lux (300 by default), lower values dim the matrix earlier. Setting `display/matrix/dimming/enable` to `off` turns the automatic brightness off while keeping the sensor readings, `sensor/light/enable` set to `off` ignores a connected sensor entirely. With MQTT enabled, the illuminance shows up as a sensor and the automatic brightness as a switch in Home Assistant, both only if a sensor is connected. If the I2C pins are already used by the matrix or the SD reader, the sensor is skipped.
 
 ## License
 
