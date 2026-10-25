@@ -89,6 +89,7 @@ Setting all[] = {
   // Update configuration
   {"update/url", &ota::manifest_url, 0, 255, NONE, "URL of the release manifest"},
   {"update/interval", &ota::check_interval, 0, 8760, NONE, "Hours between update checks, 0 only on boot"},
+  {"update/auto", &ota::auto_install, 0, 1, NONE, "Install new firmware automatically"},
 };
 // clang-format on
 

@@ -66,7 +66,7 @@ Entries are selected by their number. Changes to the colour of the clock and the
 
 ## Firmware Updates
 
-The esPINDMD checks for new firmware on boot and every few hours. If MQTT is enabled, the firmware shows up as an update entity in Home Assistant, which installs the update on request. The progress is shown on the matrix as well as in Home Assistant.
+The esPINDMD checks for new firmware on boot and every few hours. If MQTT is enabled, the firmware shows up as an update entity in Home Assistant, which installs the update on request. Setting `update/auto` to `on` installs new firmware automatically as soon as it is found. The progress is shown on the matrix as well as in Home Assistant.
 
 By default, the latest [GitHub release](https://github.com/niklasbhv/esPINDMD/releases) is used. Releases are created by pushing a version tag, e.g. `v0.1.0`, which builds the firmware for all platforms and publishes it together with a `manifest.json`.
 
@@ -75,11 +75,12 @@ To update from a local webserver instead, download the `manifest.json` and the `
 ```json
 "update": {
   "url": "http://192.168.1.10/espindmd/manifest.json",
-  "interval": 6
+  "interval": 6,
+  "auto": false
 }
 ```
 
-The `interval` sets the hours between two checks, `0` only checks on boot. A new firmware has to connect to the network (and to MQTT if enabled) within 5 minutes after the update, otherwise the previous firmware is restored.
+The `interval` sets the hours between two checks, `0` only checks on boot. A new firmware has to connect to the network (and to MQTT if enabled) within 5 minutes after the update, otherwise the previous firmware is restored. A restored firmware is not installed automatically again, a newer release or a manual installation is required.
 
 ## Hardware
 

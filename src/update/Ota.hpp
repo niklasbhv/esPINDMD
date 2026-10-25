@@ -33,11 +33,17 @@ inline std::string manifest_url =
     "manifest.json";
 // Hours between two checks for a new release, 0 only checks on boot
 inline uint16_t check_interval = 6;
+// Install new releases automatically once they are found
+inline bool auto_install = false;
 
 // Time a new firmware has to prove itself before it gets rolled back
 constexpr uint32_t CONFIRM_TIMEOUT_MS = 5 * 60 * 1000;
 // Time without receiving data before a download is aborted
 constexpr uint32_t DOWNLOAD_TIMEOUT_MS = 15000;
+// Location of the last installed version in the internal flash (NVS), used
+// to detect a release that was rolled back
+constexpr const char* NVS_NAMESPACE = "espindmd_ota";
+constexpr const char* NVS_KEY_INSTALLED = "installed";
 
 /**
  * Release information from the manifest for the running board
@@ -85,6 +91,9 @@ class Ota {
            const std::function<bool(HTTPClient&)>& handler);
   std::string resolve(const std::string& url) const;
   bool download(HTTPClient& http, const ProgressCallback& progress);
+  static std::string lastInstalled();
+  static void setLastInstalled(const std::string& version);
+  bool rolledBack() const;
 
  public:
   void begin();

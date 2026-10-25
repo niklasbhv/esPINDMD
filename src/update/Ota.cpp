@@ -17,6 +17,7 @@
 #include "Ota.hpp"
 
 #include <ArduinoJson.h>
+#include <Preferences.h>
 #include <Update.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -76,7 +77,20 @@ bool Ota::loop() {
 
   _attempted = true;
   _last_check = millis();
-  return check();
+  bool ok = check();
+  if (ok && auto_install && updateAvailable()) {
+    if (rolledBack()) {
+      Serial.printf(
+          "OTA: Not installing %s automatically, it was rolled "
+          "back before\r\n",
+          _latest.version.c_str());
+    } else {
+      Serial.printf("OTA: Installing %s automatically\r\n",
+                    _latest.version.c_str());
+      requestInstall();
+    }
+  }
+  return ok;
 }
 
 /**
@@ -155,11 +169,44 @@ bool Ota::install(const ProgressCallback& progress) {
   _progress = -1;
 
   if (ok) {
+    // If the device later runs a different version, this one was rolled back
+    setLastInstalled(_latest.version);
     Serial.println("OTA: Installed the new firmware!");
   } else {
     Serial.println("OTA: Installation failed!");
   }
   return ok;
+}
+
+/**
+ * Function used to read the version of the last installed firmware
+ */
+std::string Ota::lastInstalled() {
+  Preferences preferences;
+  // Opening read only fails if nothing was stored yet
+  if (!preferences.begin(NVS_NAMESPACE, true)) return std::string();
+  String version = preferences.isKey(NVS_KEY_INSTALLED)
+                       ? preferences.getString(NVS_KEY_INSTALLED)
+                       : String();
+  preferences.end();
+  return version.c_str();
+}
+
+void Ota::setLastInstalled(const std::string& version) {
+  Preferences preferences;
+  if (!preferences.begin(NVS_NAMESPACE, false)) return;
+  preferences.putString(NVS_KEY_INSTALLED, version.c_str());
+  preferences.end();
+}
+
+/**
+ * Function used to check if the latest release was installed before but is
+ * not running, which means it was rolled back. It is not installed
+ * automatically again, as it would most likely be rolled back again.
+ */
+bool Ota::rolledBack() const {
+  return _latest.version != ESPINDMD_VERSION &&
+         _latest.version == lastInstalled();
 }
 
 /**
